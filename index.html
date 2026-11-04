@@ -18,6 +18,7 @@
     .btn-secondary { background-color: #64748b; }
     .btn-danger { background-color: #dc2626; }
     .btn-danger:hover { background-color: #b91c1c; }
+    .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; width: auto; display: inline-block; margin-right: 4px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
     th { background-color: var(--primary); color: white; }
@@ -27,21 +28,17 @@
     .badge-listo { background-color: #dcfce7; color: #166534; }
     .badge-vacio { background-color: #f1f5f9; color: #475569; }
     
-    /* MODAL DE IMPRESIÓN QR */
+    /* MODAL DE IMPRESIÓN Y DESCARGA QR */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
-    .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 15px; }
-    .qr-card { border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; background: #fff; }
-    @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-    }
+    .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
+    .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-top: 15px; }
+    .qr-card { border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; background: #fff; text-align: center; }
+    .qr-card canvas { display: block; margin: 0 auto 8px auto; }
   </style>
 </head>
 <body>
 
-  <!-- VISTA OPERARIO (Se activa al escanear QR) -->
+  <!-- VISTA OPERARIO -->
   <div id="vistaOperario" class="card" style="display:none; max-width: 480px; margin: 0 auto;">
     <h2 id="opTanqueCodigo">Tanque ---</h2>
     <p><strong>Estilo:</strong> <span id="opEstilo">-</span> | <strong>Lote:</strong> <span id="opLote">-</span></p>
@@ -69,10 +66,10 @@
 
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button onclick="generar26Tanques()" class="btn-secondary" style="width: auto;">⚡ Auto-crear 26 Tanques</button>
-      <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Imprimir QRs Fijos (26 Tanques)</button>
+      <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Ver y Descargar QRs de Planta</button>
     </div>
 
-    <!-- EDICIÓN / REGISTRO / ELIMINACIÓN DE TANQUE -->
+    <!-- EDICIÓN / ELIMINACIÓN DE TANQUE -->
     <div class="card">
       <h2>Actualizar o Eliminar Tanque</h2>
       <div class="grid-form">
@@ -123,6 +120,7 @@
               <th>Volumen / Cap.</th>
               <th>Ocupación</th>
               <th>Estado</th>
+              <th>Acción QR</th>
             </tr>
           </thead>
           <tbody id="tablaTanques"></tbody>
@@ -131,14 +129,16 @@
     </div>
   </div>
 
-  <!-- MODAL DE QRs PARA IMPRIMIR -->
+  <!-- MODAL DE QRs PARA IMPRIMIR Y DESCARTAR -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
-      <h3>QRs Fijos de Planta (26 Tanques)</h3>
-      <p style="font-size: 12px; color: #64748b;">Imprimí estos QRs y pegalos en cada tanque correspondiente.</p>
-      <button onclick="window.print()" style="margin-bottom: 15px;">🖨️ Imprimir Todos los QRs</button>
+      <h3>Códigos QR Fijos de Planta</h3>
+      <p style="font-size: 12px; color: #64748b;">Podés descargarlos individualmente como imagen para enviarlos a imprimir o imprimirlos directamente.</p>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+        <button onclick="window.print()" style="width: auto;">🖨️ Imprimir Todos</button>
+        <button onclick="cerrarModal()" class="btn-secondary" style="width: auto;">Cerrar Ventana</button>
+      </div>
       <div id="printArea" class="qr-grid"></div>
-      <button onclick="cerrarModal()" class="btn-secondary" style="margin-top: 15px;">Cerrar</button>
     </div>
   </div>
 
@@ -147,9 +147,7 @@
     const SUPABASE_KEY = 'sb_publishable_W6LgismF0FuJY18qMS5yDA_h5jCUGyH';
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CONTRASEÑA DE ADMINISTRADOR PARA ELIMINAR TANQUES
     const ADMIN_PIN = "2026"; 
-
     let tanquesGlobal = [];
     let tanqueOperarioActual = null;
 
@@ -217,6 +215,9 @@
             <td>${t.actual} / ${t.capacidad} Lts</td>
             <td>${porc}%</td>
             <td><span class="badge badge-fermentando">${t.estado_proceso || 'Disponible'}</span></td>
+            <td>
+              <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 Descargar QR</button>
+            </td>
           </tr>`;
 
         selEdit.innerHTML += `<option value="${t.id}">${t.codigo} - ${t.estilo || 'Vacío'}</option>`;
@@ -258,7 +259,6 @@
       else { alert('Tanque actualizado'); init(); }
     }
 
-    // ELIMINAR TANQUE CON CLAVE DE ADMIN
     async function eliminarTanqueAdmin() {
       const id = document.getElementById('selectTanqueEdit').value;
       if (!id) return alert('Seleccioná un tanque para eliminar');
@@ -266,23 +266,13 @@
       const tanqueSeleccionado = tanquesGlobal.find(x => x.id === id);
       const pinIngresado = prompt(`⚠️ ATENCIÓN: Estás por eliminar el tanque ${tanqueSeleccionado.codigo}.\n\nIngresá la clave de administrador para confirmar:`);
 
-      if (pinIngresado === null) return; // Cancelado
+      if (pinIngresado === null) return;
+      if (pinIngresado !== ADMIN_PIN) return alert('❌ Clave incorrecta.');
 
-      if (pinIngresado !== ADMIN_PIN) {
-        return alert('❌ Clave incorrecta. No se pudo eliminar el tanque.');
-      }
-
-      // Borrar primero los movimientos asociados al tanque para evitar errores de base de datos
       await db.from('movimientos').delete().eq('tanque_id', id);
-
-      // Borrar el tanque
       const { error } = await db.from('tanques').delete().eq('id', id);
-      if (error) {
-        alert('Error al eliminar: ' + error.message);
-      } else {
-        alert('✅ Tanque eliminado correctamente.');
-        init();
-      }
+      if (error) alert('Error al eliminar: ' + error.message);
+      else { alert('✅ Tanque eliminado correctamente.'); init(); }
     }
 
     async function guardarMovimientoAdmin() {
@@ -306,6 +296,7 @@
       else { alert('¡Movimiento registrado!'); location.reload(); }
     }
 
+    // Modal para ver y descargar QRs
     function abrirModalQRs() {
       const printArea = document.getElementById('printArea');
       printArea.innerHTML = '';
@@ -316,11 +307,30 @@
       tanquesGlobal.forEach(t => {
         const qrDiv = document.createElement('div');
         qrDiv.className = 'qr-card';
-        qrDiv.innerHTML = `<strong>${t.codigo}</strong><br><canvas id="canvas-${t.id}"></canvas>`;
+        qrDiv.innerHTML = `
+          <strong>${t.codigo}</strong><br>
+          <canvas id="canvas-${t.id}"></canvas>
+          <button onclick="descargarQRIndividual('${t.codigo}')" style="font-size: 11px; padding: 6px; margin-top: 5px;">📥 Descargar</button>
+        `;
         printArea.appendChild(qrDiv);
 
         const targetUrl = `${baseUrl}?tanque=${t.codigo}`;
-        QRCode.toCanvas(document.getElementById(`canvas-${t.id}`), targetUrl, { width: 100 });
+        QRCode.toCanvas(document.getElementById(`canvas-${t.id}`), targetUrl, { width: 120 });
+      });
+    }
+
+    // Función para descargar el QR de un tanque específico como imagen PNG
+    function descargarQRIndividual(codigoTanque) {
+      const canvasTemp = document.createElement('canvas');
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      const targetUrl = `${baseUrl}?tanque=${codigoTanque}`;
+
+      QRCode.toCanvas(canvasTemp, targetUrl, { width: 300 }, function (error) {
+        if (error) return alert('Error generando QR');
+        const link = document.createElement('a');
+        link.download = `QR_${codigoTanque}.png`;
+        link.href = canvasTemp.toDataURL('image/png');
+        link.click();
       });
     }
 
@@ -329,5 +339,4 @@
     init();
   </script>
 </body>
-</html>
 </html>
