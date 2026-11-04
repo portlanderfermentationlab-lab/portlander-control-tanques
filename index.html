@@ -9,25 +9,18 @@
   <style>
     :root { --primary: #0f172a; --accent: #2563eb; --bg: #f8fafc; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: #334155; }
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 1000px; margin-left: auto; margin-right: auto; }
     h1, h2, h3 { color: var(--primary); margin-top: 0; }
-    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px; }
-    input, select, button { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+    input, select, button { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
     button { background-color: var(--accent); color: white; border: none; font-weight: 600; cursor: pointer; }
     button:hover { opacity: 0.9; }
     .btn-secondary { background-color: #64748b; }
-    .btn-danger { background-color: #dc2626; }
-    .btn-danger:hover { background-color: #b91c1c; }
-    .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; width: auto; display: inline-block; margin-right: 4px; }
+    .btn-save { background-color: #16a34a; padding: 6px 12px; font-size: 12px; }
+    .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; width: auto; display: inline-block; }
     .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: middle; }
     th { background-color: var(--primary); color: white; }
-    .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; }
-    .badge-fermentando { background-color: #fef3c7; color: #92400e; }
-    .badge-madurando { background-color: #dbeafe; color: #1e40af; }
-    .badge-listo { background-color: #dcfce7; color: #166534; }
-    .badge-vacio { background-color: #f1f5f9; color: #475569; }
     
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
@@ -42,9 +35,9 @@
   <div id="vistaLoginAdmin" class="card" style="margin-top: 50px; text-align: center; display:none;">
     <h2>🔐 Acceso Administrativo</h2>
     <p style="font-size: 13px; color: #64748b;">Ingrese el PIN de administrador para ver el panel general de la planta.</p>
-    <input type="password" id="inputPinAdmin" placeholder="PIN de Administrador" style="margin-bottom: 15px; text-align: center; font-size: 18px; max-width: 300px; margin-left: auto; margin-right: auto;">
+    <input type="password" id="inputPinAdmin" placeholder="PIN de Administrador" style="margin-bottom: 15px; text-align: center; font-size: 18px; max-width: 300px; width: 100%;">
     <br>
-    <button onclick="verificarPinAdmin()" style="padding: 12px; max-width: 300px;">Ingresar al Panel</button>
+    <button onclick="verificarPinAdmin()" style="padding: 12px; max-width: 300px; width: 100%;">Ingresar al Panel</button>
   </div>
 
   <!-- VISTA OPERARIO (Escaneo de QR) -->
@@ -52,18 +45,18 @@
     <h2 id="opTanqueCodigo" style="text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 8px;">Tanque ---</h2>
     
     <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <p style="margin: 6px 0;"><strong>Estilo:</strong> <span id="opEstilo">-</span></p>
-      <p style="margin: 6px 0;"><strong>Lote:</strong> <span id="opLote">-</span></p>
-      <p style="margin: 6px 0;"><strong>Estado:</strong> <span id="opEstado" class="badge">-</span></p>
+      <p style="margin: 6px 0;"><strong>Estilo(s):</strong> <span id="opEstilo">-</span></p>
+      <p style="margin: 6px 0;"><strong>Lote(s):</strong> <span id="opLote">-</span></p>
+      <p style="margin: 6px 0;"><strong>Estado:</strong> <span id="opEstado">-</span></p>
       <p style="margin: 6px 0; font-size: 16px;"><strong>Volumen Actual / Capacidad:</strong> <span id="opVolumen" style="font-weight: bold; color: var(--accent);">0</span> Lts</p>
     </div>
     
     <h3>Registrar Movimiento</h3>
-    <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="margin-bottom: 10px;">
+    <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="margin-bottom: 10px; width: 100%;">
       <option value="Carga">Carga (Entrada en Lts)</option>
       <option value="Purga">Purga de Levadura (en Baldes)</option>
       <option value="Recupero Levadura">Recupero de Levadura (en Kg)</option>
-      <option value="Trasvase">Trasvase a otro Tanque</option>
+      <option value="Trasvase">Trasvase a otro Tanque (Blend automático)</option>
       <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
       <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
       <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
@@ -72,71 +65,37 @@
 
     <div id="divTanqueDestino" style="display:none; margin-bottom: 10px;">
       <label style="font-size: 12px; font-weight: bold;">Tanque Destino:</label>
-      <select id="opTanqueDestino"><option value="">Seleccionar tanque receptor...</option></select>
+      <select id="opTanqueDestino" style="width: 100%;"><option value="">Seleccionar tanque receptor...</option></select>
     </div>
 
-    <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="margin-bottom: 15px;">
-    <button onclick="guardarMovimientoOperario()" style="padding: 14px; font-size: 16px;">Guardar Registro</button>
+    <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="margin-bottom: 15px; width: 100%;">
+    <button onclick="guardarMovimientoOperario()" style="padding: 14px; font-size: 16px; width: 100%;">Guardar Registro</button>
   </div>
 
   <!-- VISTA ADMIN / DASHBOARD GENERAL -->
   <div id="vistaDashboard" style="display:none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h1>🍺 Portlander - Control de Tanques</h1>
-      <button onclick="cerrarSesionAdmin()" class="btn-secondary" style="width: auto; padding: 8px 14px;">Cerrar Sesión Admin</button>
+      <h1>🍺 Portlander - Control de Tanques (Multi-Lote y Blend)</h1>
+      <button onclick="cerrarSesionAdmin()" class="btn-secondary" style="width: auto; padding: 8px 14px;">Cerrar Sesión</button>
     </div>
 
     <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Ver y Descargar QRs de Planta</button>
     </div>
 
-    <!-- CREAR NUEVO TANQUE -->
     <div class="card">
-      <h2>➕ Agregar Nuevo Tanque</h2>
-      <div class="grid-form">
-        <input type="text" id="nuevoCodigo" placeholder="Código (ej. TNQ-27)">
-        <input type="number" id="nuevoCapacidad" placeholder="Capacidad Máxima (Lts)">
-        <input type="text" id="nuevoEstilo" placeholder="Estilo inicial">
-        <input type="text" id="nuevoLote" placeholder="N° de Lote inicial">
-      </div>
-      <button onclick="crearTanqueAdmin()" style="background-color: #16a34a; margin-top: 10px;">Crear Tanque (Requiere PIN)</button>
-    </div>
-
-    <!-- EDICIÓN / ELIMINACIÓN DE TANQUE -->
-    <div class="card">
-      <h2>⚙️ Actualizar Capacidad, Estado o Eliminar Tanque</h2>
-      <div class="grid-form">
-        <select id="selectTanqueEdit" onchange="cargarDatosEdicion()"><option value="">Seleccionar Tanque...</option></select>
-        <input type="number" id="editCapacidad" placeholder="Capacidad Máxima (Lts)">
-        <input type="text" id="editEstilo" placeholder="Estilo Cerveza">
-        <input type="text" id="editLote" placeholder="N° de Lote">
-        <select id="editEstado">
-          <option value="Disponible">Disponible / Vacío</option>
-          <option value="Fermentando">Fermentando</option>
-          <option value="Madurando">Madurando</option>
-          <option value="Listo">Listo para Envasar</option>
-        </select>
-      </div>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button onclick="actualizarTanqueAdmin()" style="flex: 2;">Guardar Cambios (Capacidad, Estilo, etc.)</button>
-        <button onclick="eliminarTanqueAdmin()" class="btn-danger" style="flex: 1;">🗑️ Eliminar Tanque</button>
-      </div>
-    </div>
-
-    <!-- ESTADO DE LA PLANTA -->
-    <div class="card">
-      <h2>📊 Estado de la Planta <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Hacé clic en el código de un tanque para ver su historial)</span></h2>
+      <h2>📊 Estado y Gestión de Tanques (Múltiples Estilos / Lotes)</h2>
+      <p style="font-size: 12px; color: #64748b; margin-top: 0;">Podés escribir múltiples estilos separados por barra (ej: <i>IPA / APA</i>) o lotes combinados (ej: <i>L-01 + L-02</i>). Hacé clic en el código del tanque para ver su historial.</p>
       <div style="overflow-x: auto;">
         <table>
           <thead>
             <tr>
               <th>Tanque</th>
-              <th>Estilo</th>
-              <th>Lote</th>
-              <th>Volumen Actual / Capacidad</th>
-              <th>Ocupación</th>
+              <th>Estilo(s)</th>
+              <th>Lote(s)</th>
+              <th>Vol. Actual / Cap. Máx</th>
               <th>Estado</th>
-              <th>Acción QR</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaTanques"></tbody>
@@ -282,51 +241,73 @@
 
     function renderDashboard() {
       const tbody = document.getElementById('tablaTanques');
-      const selEdit = document.getElementById('selectTanqueEdit');
-
       tbody.innerHTML = '';
-      selEdit.innerHTML = '<option value="">Seleccionar Tanque...</option>';
 
       tanquesGlobal.forEach(t => {
         const cap = t.capacidad || 1000;
-        const porc = Math.min(100, Math.round((t.actual / cap) * 100));
         tbody.innerHTML += `
           <tr>
             <td><strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong></td>
-            <td>${t.estilo || '-'}</td>
-            <td>${t.lote || '-'}</td>
-            <td>${t.actual} / ${cap} Lts</td>
-            <td>${porc}%</td>
-            <td><span class="badge badge-fermentando">${t.estado_proceso || 'Disponible'}</span></td>
+            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: IPA / APA" style="width: 140px;"></td>
+            <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 120px;"></td>
             <td>
-              <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 Descargar QR</button>
+              ${t.actual} / <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 70px; display:inline-block;"> Lts
+            </td>
+            <td>
+              <select id="estado-${t.id}" style="width: 110px;">
+                <option value="Disponible" ${t.estado_proceso === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                <option value="Fermentando" ${t.estado_proceso === 'Fermentando' ? 'selected' : ''}>Fermentando</option>
+                <option value="Madurando" ${t.estado_proceso === 'Madurando' ? 'selected' : ''}>Madurando</option>
+                <option value="Listo" ${t.estado_proceso === 'Listo' ? 'selected' : ''}>Listo</option>
+              </select>
+            </td>
+            <td>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-save" onclick="guardarFilaTanque('${t.id}')">💾 Guardar</button>
+                <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 QR</button>
+              </div>
             </td>
           </tr>`;
-
-        selEdit.innerHTML += `<option value="${t.id}">${t.codigo} (Cap: ${cap} Lts)</option>`;
       });
     }
 
-    // VER HISTORIAL DE UN TANQUE ESPECÍFICO
+    async function guardarFilaTanque(id) {
+      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para confirmar:');
+      if (pin === null) return;
+      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
+
+      const estilo = document.getElementById(`estilo-${id}`).value;
+      const lote = document.getElementById(`lote-${id}`).value;
+      const capacidad = parseFloat(document.getElementById(`capacidad-${id}`).value) || 1000;
+      const estado_proceso = document.getElementById(`estado-${id}`).value;
+
+      const { error } = await db.from('tanques').update({ estilo, lote, capacidad, estado_proceso }).eq('id', id);
+      if (error) {
+        alert('Error al actualizar: ' + error.message);
+      } else {
+        alert('✅ Tanque actualizado correctamente.');
+        init();
+      }
+    }
+
     function verHistorialTanque(tanqueId) {
       const tanque = tanquesGlobal.find(t => t.id === tanqueId);
       if (!tanque) return;
 
-      document.getElementById('historialTitulo').innerText = `Historial de Movimientos - ${tanque.codigo} (${tanque.estilo || 'Sin estilo'})`;
+      document.getElementById('historialTitulo').innerText = `Historial de Movimientos - ${tanque.codigo}`;
       const tablaHistorial = document.getElementById('tablaHistorialTanque');
       tablaHistorial.innerHTML = '';
 
-      // Filtrar movimientos donde este tanque sea origen o destino
       const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
 
       if (movsTanque.length === 0) {
-        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">No hay movimientos registrados para este tanque.</td></tr>`;
+        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">No hay movimientos registrados.</td></tr>`;
       } else {
         movsTanque.forEach(m => {
           let desc = m.tipo;
           if (m.tipo === 'Trasvase') {
-            if (m.tanque_id === tanqueId) desc = `Trasvase (Salida a otro tanque)`;
-            else desc = `Trasvase (Entrada desde otro tanque)`;
+            if (m.tanque_id === tanqueId) desc = `Trasvase (Salida)`;
+            else desc = `Trasvase (Entrada - Blend)`;
           }
           let fechaFormateada = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
           tablaHistorial.innerHTML = `
@@ -353,7 +334,7 @@
 
       if (tipo === 'Trasvase') {
         divDestino.style.display = 'block';
-        inputCant.placeholder = 'Litros a trasvasar';
+        inputCant.placeholder = 'Litros a trasvasar / blendar';
       } else {
         divDestino.style.display = 'none';
         if (tipo === 'Purga') inputCant.placeholder = 'Cantidad en Baldes';
@@ -362,87 +343,31 @@
       }
     }
 
-    function cargarDatosEdicion() {
-      const id = document.getElementById('selectTanqueEdit').value;
-      const t = tanquesGlobal.find(x => x.id === id);
-      if (t) {
-        document.getElementById('editCapacidad').value = t.capacidad || 1000;
-        document.getElementById('editEstilo').value = t.estilo || '';
-        document.getElementById('editLote').value = t.lote || '';
-        document.getElementById('editEstado').value = t.estado_proceso || 'Disponible';
-      }
-    }
-
-    async function crearTanqueAdmin() {
-      const codigo = document.getElementById('nuevoCodigo').value.trim();
-      const capacidad = document.getElementById('nuevoCapacidad').value;
-      const estilo = document.getElementById('nuevoEstilo').value || 'Sin definir';
-      const lote = document.getElementById('nuevoLote').value || 'S/N';
-
-      if (!codigo || !capacidad) return alert('Completá al menos el código y la capacidad.');
-
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para crear el tanque:');
-      if (pin === null) return;
-      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
-
-      const { error } = await db.from('tanques').insert([{ codigo, capacidad, estilo, lote, estado_proceso: 'Disponible' }]);
-      if (error) alert('Error al crear tanque: ' + error.message);
-      else { alert('✅ Tanque creado con éxito.'); location.reload(); }
-    }
-
-    async function actualizarTanqueAdmin() {
-      const id = document.getElementById('selectTanqueEdit').value;
-      if (!id) return alert('Seleccioná un tanque');
-
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para confirmar:');
-      if (pin === null) return;
-      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
-
-      const capacidad = parseFloat(document.getElementById('editCapacidad').value) || 1000;
-      const estilo = document.getElementById('editEstilo').value;
-      const lote = document.getElementById('editLote').value;
-      const estado_proceso = document.getElementById('editEstado').value;
-
-      const { error } = await db.from('tanques').update({ capacidad, estilo, lote, estado_proceso }).eq('id', id);
-      if (error) alert('Error: ' + error.message);
-      else { alert('✅ Tanque actualizado correctamente.'); init(); }
-    }
-
-    async function eliminarTanqueAdmin() {
-      const id = document.getElementById('selectTanqueEdit').value;
-      if (!id) return alert('Seleccioná un tanque para eliminar');
-
-      const tanqueSeleccionado = tanquesGlobal.find(x => x.id === id);
-      const pin = prompt(`⚠️ ATENCIÓN: Estás por eliminar el tanque ${tanqueSeleccionado.codigo}.\n\nIngresá el PIN de Administrador (2026):`);
-
-      if (pin === null) return;
-      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
-
-      await db.from('movimientos').delete().eq('tanque_id', id);
-      await db.from('movimientos').delete().eq('tanque_destino_id', id);
-      
-      const { error } = await db.from('tanques').delete().eq('id', id);
-      if (error) alert('Error al eliminar: ' + error.message);
-      else { alert('✅ Tanque eliminado correctamente.'); init(); }
-    }
-
     async function guardarMovimientoOperario() {
       const tipo = document.getElementById('opTipoMovimiento').value;
       const cantidad = document.getElementById('opCantidad').value;
       if (!cantidad) return alert('Ingresá la cantidad');
 
       let tanque_destino_id = null;
-      let loteNuevo = tanqueOperarioActual.lote;
 
       if (tipo === 'Trasvase') {
         tanque_destino_id = document.getElementById('opTanqueDestino').value;
-        if (!tanque_destino_id) return alert('Seleccioná el tanque receptor');
+        if (!tanque_destino_id) return alert('Seleccioná el tanque receptor para el blend');
 
         const tanqueDestinoObj = tanquesGlobal.find(x => x.id === tanque_destino_id);
-        if (tanqueDestinoObj && tanqueDestinoObj.lote && tanqueDestinoObj.lote !== 'S/N' && tanqueDestinoObj.lote !== tanqueOperarioActual.lote) {
-          loteNuevo = `${tanqueDestinoObj.lote} + ${tanqueOperarioActual.lote}`;
+        
+        // Combinar estilos y lotes automáticamente al hacer el blend
+        let nuevoEstilo = tanqueDestinoObj.estilo || '';
+        if (tanqueOperarioActual.estilo && !nuevoEstilo.includes(tanqueOperarioActual.estilo)) {
+          nuevoEstilo = nuevoEstilo ? `${nuevoEstilo} + ${tanqueOperarioActual.estilo}` : tanqueOperarioActual.estilo;
         }
-        await db.from('tanques').update({ lote: loteNuevo }).eq('id', tanque_destino_id);
+
+        let nuevoLote = tanqueDestinoObj.lote || '';
+        if (tanqueOperarioActual.lote && !nuevoLote.includes(tanqueOperarioActual.lote)) {
+          nuevoLote = nuevoLote ? `${nuevoLote} + ${tanqueOperarioActual.lote}` : tanqueOperarioActual.lote;
+        }
+
+        await db.from('tanques').update({ estilo: nuevoEstilo, lote: nuevoLote }).eq('id', tanque_destino_id);
       }
 
       const { error } = await db.from('movimientos').insert([{ 
@@ -453,7 +378,7 @@
       }]);
 
       if (error) alert('Error: ' + error.message);
-      else { alert('¡Movimiento registrado con éxito!'); location.reload(); }
+      else { alert('¡Movimiento y blend registrados con éxito!'); location.reload(); }
     }
 
     function abrirModalQRs() {
