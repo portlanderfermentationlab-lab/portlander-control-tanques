@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portlander - Gestión Cervecera</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Librería para generar códigos QR -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #1a1a1a; }
+    h1 { color: #0d1b2a; display: flex; align-items: center; gap: 10px; }
+    .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    input, select, button { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+    input:focus, select:focus { border-color: #2563eb; }
+    button { background-color: #2563eb; color: white; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    button:hover { background-color: #1d4ed8; }
+    .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; }
+    .btn-qr:hover { background-color: #4338ca; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+    th { background-color: #0f172a; color: white; font-weight: 500; }
+    .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+    .badge-fermentando { background-color: #fef3c7; color: #92400e; }
+    .badge-madurando { background-color: #dbeafe; color: #1e40af; }
+    .badge-listo { background-color: #dcfce7; color: #166534; }
+    .badge-vacio { background-color: #f1f5f9; color: #475569; }
+    /* Modal de QR */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 24px; border-radius: 12px; text-align: center; max-width: 320px; width: 90%; }
+    canvas { margin: 15px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>🍺 Portlander - Control de Tanques & Lotes</h1>
+
+  <!-- REGISTRO DE TANQUES -->
+  <div class="card">
+    <h2>Registrar Nuevo Tanque</h2>
+    <div class="grid-form">
+      <input type="text" id="codigo" placeholder="Código (ej. TNQ-01)">
+      <input type="number" id="capacidad" placeholder="Capacidad Total (Lts)">
+      <input type="text" id="estilo" placeholder="Estilo Cerveza (ej. IPA)">
+      <input type="text" id="lote" placeholder="N° de Lote (ej. L-2026-01)">
+      <select id="estadoProceso">
+        <option value="Disponible">Vacío / Disponible</option>
+        <option value="Fermentando">Fermentando</option>
+        <option value="Madurando">Madurando</option>
+        <option value="Listo">Listo para Envasar</option>
+      </select>
+    </div>
+    <button onclick="guardarTanque()">Guardar Tanque</button>
+  </div>
+
+  <!-- REGISTRO DE MOVIMIENTOS -->
+  <div class="card">
+    <h2>Registrar Movimiento / Bajada Operativa</h2>
+    <div class="grid-form">
+      <select id="selectTanque"><option value="">Cargando tanques...</option></select>
+      <select id="tipoMovimiento">
+        <option value="Carga">Carga (Entrada)</option>
+        <option value="Purga">Purga de Levadura</option>
+        <option value="Recupero Levadura">Recupero de Levadura</option>
+        <option value="Envasado Lata">Envasado en Lata</option>
+        <option value="Trasvase Barril">Trasvase a Barril</option>
+        <option value="Descarga General">Descarga / Limpieza</option>
+      </select>
+      <input type="number" id="cantidadCerveza" placeholder="Litros bajados/cargados">
+    </div>
+    <button onclick="guardarMovimiento()">Registrar Movimiento</button>
+  </div>
+
+  <!-- ESTADO DE TANQUES -->
+  <div class="card">
+    <h2>Estado Actual de la Planta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanque</th>
+          <th>Estilo</th>
+          <th>Lote</th>
+          <th>Volumen / Cap.</th>
+          <th>Ocupación</th>
+          <th>Estado Proceso</th>
+          <th>Ficha / QR</th>
+        </tr>
+      </thead>
+      <tbody id="tablaTanques"></tbody>
+    </table>
+  </div>
+
+  <!-- HISTORIAL DE MOVIMIENTOS -->
+  <div class="card">
+    <h2>Historial de Movimientos Cerveceros</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanque</th>
+          <th>Tipo Movimiento</th>
+          <th>Litros</th>
+          <th>Fecha y Hora</th>
+        </tr>
+      </thead>
+      <tbody id="tablaMovimientos"></tbody>
+    </table>
+  </div>
+
+  <!-- MODAL QR -->
+  <div id="qrModal" class="modal">
+    <div class="modal-content">
+      <h3 id="qrModalTitle">Código QR Tanque</h3>
+      <canvas id="qrCanvas"></canvas>
+      <p style="font-size: 12px; color: #64748b;">Pegá este QR en el tanque para que el operario lo escanee con el celular.</p>
+      <button onclick="cerrarModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://lkaiklforufoirqlrczo.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_W6LgismF0FuJY18qMS5yDA_h5jCUGyH';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function cargarDashboard() {
+      const [resTanques, resMovs] = await Promise.all([
+        db.from('tanques').select('*'),
+        db.from('movimientos').select('*')
+      ]);
+
+      if (resTanques.error) return alert('Error tanques: ' + resTanques.error.message);
+
+      const tanques = resTanques.data;
+      const movimientos = resMovs.data || [];
+
+      // Calcular volumen por tanque
+      const volumenes = {};
+      movimientos.forEach(m => {
+        if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
+        const cant = parseFloat(m.cantidad);
+        if (m.tipo === 'Carga') {
+          volumenes[m.tanque_id] += cant;
+        } else {
+          volumenes[m.tanque_id] -= cant;
+        }
+      });
+
+      // Render Tabla Tanques
+      const tbodyTanques = document.getElementById('tablaTanques');
+      const selectTanque = document.getElementById('selectTanque');
+      tbodyTanques.innerHTML = '';
+      selectTanque.innerHTML = '<option value="">Seleccionar Tanque</option>';
+
+      tanques.forEach(t => {
+        const actual = Math.max(0, volumenes[t.id] || 0);
+        const porcentaje = Math.min(100, Math.round((actual / t.capacidad) * 100));
+        
+        let badgeClass = 'badge-vacio';
+        if (t.estado_proceso === 'Fermentando') badgeClass = 'badge-fermentando';
+        if (t.estado_proceso === 'Madurando') badgeClass = 'badge-madurando';
+        if (t.estado_proceso === 'Listo') badgeClass = 'badge-listo';
+
+        tbodyTanques.innerHTML += `
+          <tr>
+            <td><strong>${t.codigo}</strong></td>
+            <td>${t.estilo || 'Sin definir'}</td>
+            <td>${t.lote || 'S/N'}</td>
+            <td>${actual} / ${t.capacidad} Lts</td>
+            <td>${porcentaje}%</td>
+            <td><span class="badge ${badgeClass}">${t.estado_proceso || 'Disponible'}</span></td>
+            <td>
+              <button class="btn-qr" onclick="verQR('${t.codigo}', '${t.id}')">📱 Ver QR</button>
+            </td>
+          </tr>`;
+
+        selectTanque.innerHTML += `<option value="${t.id}">${t.codigo} - ${t.estilo || 'S/E'}</option>`;
+      });
+
+      // Render Historial Movimientos
+      const tbodyMovs = document.getElementById('tablaMovimientos');
+      tbodyMovs.innerHTML = '';
+      movimientos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      movimientos.forEach(m => {
+        const tRel = tanques.find(t => t.id === m.tanque_id);
+        const cod = tRel ? tRel.codigo : 'Tanque eliminado';
+        tbodyMovs.innerHTML += `
+          <tr>
+            <td><strong>${cod}</strong></td>
+            <td>${m.tipo}</td>
+            <td>${m.cantidad} Lts</td>
+            <td>${new Date(m.created_at).toLocaleString()}</td>
+          </tr>`;
+      });
+    }
+
+    async function guardarTanque() {
+      const codigo = document.getElementById('codigo').value;
+      const capacidad = document.getElementById('capacidad').value;
+      const estilo = document.getElementById('estilo').value;
+      const lote = document.getElementById('lote').value;
+      const estado_proceso = document.getElementById('estadoProceso').value;
+
+      if (!codigo || !capacidad) return alert('Completá código y capacidad');
+
+      const { error } = await db.from('tanques').insert([{ codigo, capacidad, estilo, lote, estado_proceso }]);
+      if (error) alert('Error: ' + error.message);
+      else {
+        document.getElementById('codigo').value = '';
+        document.getElementById('capacidad').value = '';
+        document.getElementById('estilo').value = '';
+        document.getElementById('lote').value = '';
+        cargarDashboard();
+      }
+    }
+
+    async function guardarMovimiento() {
+      const tanque_id = document.getElementById('selectTanque').value;
+      const tipo = document.getElementById('tipoMovimiento').value;
+      const cantidad = document.getElementById('cantidadCerveza').value;
+
+      if (!tanque_id || !cantidad) return alert('Seleccioná tanque y cantidad');
+
+      const { error } = await db.from('movimientos').insert([{ tanque_id, tipo, cantidad }]);
+      if (error) alert('Error: ' + error.message);
+      else {
+        document.getElementById('cantidadCerveza').value = '';
+        cargarDashboard();
+      }
+    }
+
+    function verQR(codigo, id) {
+      document.getElementById('qrModalTitle').innerText = `QR - Tanque ${codigo}`;
+      const urlFicha = `${window.location.origin}${window.location.pathname}?tanque_id=${id}`;
+      QRCode.toCanvas(document.getElementById('qrCanvas'), urlFicha, { width: 200 }, function (error) {
+        if (error) console.error(error);
+        document.getElementById('qrModal').style.display = 'flex';
+      });
+    }
+
+    function cerrarModal() {
+      document.getElementById('qrModal').style.display = 'none';
+    }
+
+    // Inicializar
+    cargarDashboard();
+  </script>
+</body>
+</html>
