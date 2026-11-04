@@ -28,100 +28,78 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .container { max-width: 1100px; margin: 0 auto; }
 
     .card { 
       background: var(--card-bg); 
       padding: 24px; 
       border-radius: 16px; 
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
       border: 1px solid var(--border);
       margin-bottom: 24px; 
     }
 
-    h1, h2, h3 { 
-      color: var(--text-main); 
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      margin-top: 0; 
-    }
-
+    h1, h2, h3 { color: var(--text-main); font-weight: 700; margin-top: 0; }
     h1 { font-size: 24px; }
     h2 { font-size: 18px; margin-bottom: 8px; }
-
-    p {
-      color: var(--text-muted);
-      font-size: 14px;
-    }
+    p { color: var(--text-muted); font-size: 14px; }
 
     input, select { 
-      padding: 10px 14px; 
+      padding: 8px 12px; 
       border: 1px solid var(--border); 
       border-radius: 8px; 
-      font-size: 14px; 
+      font-size: 13px; 
       background-color: #fff;
       color: var(--text-main);
       box-sizing: border-box; 
-      transition: all 0.2s ease;
       font-family: inherit;
     }
 
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
     button { 
-      padding: 10px 16px; 
+      padding: 8px 14px; 
       background-color: var(--accent); 
       color: white; 
       border: none; 
       border-radius: 8px; 
       font-weight: 600; 
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer; 
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      font-family: inherit;
+      transition: background-color 0.2s;
     }
-
     button:hover { background-color: var(--accent-hover); }
-    button:active { transform: scale(0.98); }
 
     .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
     .btn-secondary:hover { background-color: #e2e8f0; }
 
-    .btn-save { background-color: var(--success); padding: 8px 14px; font-size: 13px; }
+    .btn-save { background-color: var(--success); }
     .btn-save:hover { background-color: #15803d; }
 
-    .btn-qr { background-color: #4f46e5; padding: 8px 14px; font-size: 13px; }
+    .btn-qr { background-color: #4f46e5; }
     .btn-qr:hover { background-color: #4338ca; }
 
     .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
     .clickable-tanque:hover { text-decoration: underline; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
-    th, td { padding: 12px 14px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
-    th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
+    th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
     tr:hover td { background-color: #fafafa; }
     
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     
     .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
-    .qr-card { border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: #fff; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .qr-card { border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: #fff; text-align: center; }
     .qr-card canvas { display: block; margin: 0 auto 10px auto; }
-    
     .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #f1f5f9; color: var(--text-muted); }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- PANTALLA DE LOGIN ADMIN -->
+    <!-- LOGIN ADMIN -->
     <div id="vistaLoginAdmin" class="card" style="max-width: 420px; margin: 80px auto; text-align: center; display:none;">
       <div style="font-size: 36px; margin-bottom: 10px;">🍺</div>
       <h2>Panel de Acceso</h2>
@@ -130,7 +108,7 @@
       <button onclick="verificarPinAdmin()" style="width: 100%; padding: 12px;">Ingresar al Sistema</button>
     </div>
 
-    <!-- VISTA OPERARIO (Escaneo de QR) -->
+    <!-- VISTA OPERARIO (QR) -->
     <div id="vistaOperario" class="card" style="max-width: 500px; margin: 40px auto; display:none;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px;">
         <h2 id="opTanqueCodigo" style="margin: 0; font-size: 22px;">Tanque ---</h2>
@@ -188,12 +166,12 @@
       <button onclick="guardarMovimientoOperario()" style="width: 100%; padding: 14px; font-size: 15px;">Guardar Registro</button>
     </div>
 
-    <!-- VISTA ADMIN / DASHBOARD GENERAL -->
+    <!-- VISTA DASHBOARD ADMIN -->
     <div id="vistaDashboard" style="display:none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
-          <h1>Control de Tanques</h1>
-          <p>Panel operativo y gestión de planta en tiempo real.</p>
+          <h1>Control de Tanques (Admin)</h1>
+          <p>Gestión completa de planta, estilos múltiples, blends y ajustes directos.</p>
         </div>
         <div style="display: flex; gap: 10px;">
           <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR</button>
@@ -202,8 +180,8 @@
       </div>
 
       <div class="card">
-        <h2>Estado de Tanques</h2>
-        <p>Modificá los estilos, lotes, capacidades o estados directamente y guardá cada fila. Los nombres de los tanques son fijos.</p>
+        <h2>Listado General de Tanques</h2>
+        <p>Aquí podés modificar estilos, lotes, estados y **el volumen actual directamente** desde la computadora.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -211,7 +189,7 @@
                 <th>Tanque</th>
                 <th>Estilo(s)</th>
                 <th>Lote(s)</th>
-                <th>Volumen / Capacidad</th>
+                <th>Volumen Actual / Cap.</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -223,11 +201,11 @@
     </div>
   </div>
 
-  <!-- MODAL DE QRs -->
+  <!-- MODAL QRS -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
       <h2>Códigos QR de Planta</h2>
-      <p>Imprimí o descargá los códigos QR individuales para cada tanque.</p>
+      <p>Códigos vinculados correctamente a esta aplicación web.</p>
       <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
         <button onclick="window.print()">🖨️ Imprimir Todos</button>
         <button onclick="cerrarModal()" class="btn-secondary">Cerrar Ventana</button>
@@ -236,7 +214,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE HISTORIAL DE TANQUE -->
+  <!-- MODAL HISTORIAL -->
   <div id="historialModal" class="modal">
     <div class="modal-content" style="max-width: 650px;">
       <h2 id="historialTitulo" style="margin-bottom: 20px;">Historial del Tanque</h2>
@@ -290,13 +268,13 @@
           if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
           const cant = parseFloat(m.cantidad) || 0;
           
-          if (m.tipo === 'Carga') {
+          if (m.tipo === 'Carga' || m.tipo === 'Ajuste Manual (+)') {
             volumenes[m.tanque_id] += cant;
           } else if (m.tipo === 'Trasvase' && m.tanque_destino_id) {
             volumenes[m.tanque_id] -= cant;
             if (!volumenes[m.tanque_destino_id]) volumenes[m.tanque_destino_id] = 0;
             volumenes[m.tanque_destino_id] += cant;
-          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura') {
+          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura' && m.tipo !== 'Ajuste Manual (-)') {
             volumenes[m.tanque_id] -= cant;
           }
         });
@@ -371,13 +349,14 @@
               <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong>
               <br><button onclick="cambiarNombreTanque('${t.id}', '${t.codigo}')" style="background:none; border:none; color:var(--accent); font-size:11px; padding:0; cursor:pointer; margin-top:2px;">✏️ Renombrar</button>
             </td>
-            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: IPA / APA" style="width: 130px;"></td>
+            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: Pilsen + Hops" style="width: 120px;"></td>
             <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 110px;"></td>
             <td>
-              <span style="font-weight: 600;">${t.actual}</span> / <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 70px; display:inline-block;"> Lts
+              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 65px;" title="Volumen actual"> / 
+              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 65px;" title="Capacidad máxima"> L
             </td>
             <td>
-              <select id="estado-${t.id}" style="width: 110px;">
+              <select id="estado-${t.id}" style="width: 105px;">
                 <option value="Disponible" ${t.estado_proceso === 'Disponible' ? 'selected' : ''}>Disponible</option>
                 <option value="Fermentando" ${t.estado_proceso === 'Fermentando' ? 'selected' : ''}>Fermentando</option>
                 <option value="Madurando" ${t.estado_proceso === 'Madurando' ? 'selected' : ''}>Madurando</option>
@@ -385,8 +364,8 @@
               </select>
             </td>
             <td>
-              <div style="display: flex; gap: 6px;">
-                <button class="btn-save" onclick="guardarFilaTanque('${t.id}')">💾 Guardar</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-save" onclick="guardarFilaTanque('${t.id}', ${t.actual})">💾 Guardar</button>
                 <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 QR</button>
               </div>
             </td>
@@ -395,39 +374,44 @@
     }
 
     async function cambiarNombreTanque(id, codigoActual) {
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para renombrar este tanque:');
-      if (pin === null) return;
+      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026):');
       if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
-
-      const nuevoCodigo = prompt(`Ingresá el nuevo nombre/código para el tanque (Actual: ${codigoActual}):`, codigoActual);
-      if (!nuevoCodigo || nuevoCodigo.trim() === '') return;
+      const nuevoCodigo = prompt('Nuevo nombre/código del tanque:', codigoActual);
+      if (!nuevoCodigo || !nuevoCodigo.trim()) return;
 
       const { error } = await db.from('tanques').update({ codigo: nuevoCodigo.trim() }).eq('id', id);
-      if (error) {
-        alert('Error al actualizar el nombre: ' + error.message);
-      } else {
-        alert('✅ Nombre del tanque actualizado con éxito.');
-        init();
-      }
+      if (error) alert('Error: ' + error.message);
+      else { alert('✅ Actualizado.'); init(); }
     }
 
-    async function guardarFilaTanque(id) {
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para confirmar:');
-      if (pin === null) return;
+    async function guardarFilaTanque(id, volumenCalculadoActual) {
+      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para confirmar cambios:');
       if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
 
       const estilo = document.getElementById(`estilo-${id}`).value;
       const lote = document.getElementById(`lote-${id}`).value;
       const capacidad = parseFloat(document.getElementById(`capacidad-${id}`).value) || 1000;
       const estado_proceso = document.getElementById(`estado-${id}`).value;
+      const nuevoVolumenDeseado = parseFloat(document.getElementById(`volActual-${id}`).value) || 0;
 
-      const { error } = await db.from('tanques').update({ estilo, lote, capacidad, estado_proceso }).eq('id', id);
-      if (error) {
-        alert('Error al actualizar: ' + error.message);
-      } else {
-        alert('✅ Tanque actualizado correctamente.');
-        init();
+      // Actualizar datos generales del tanque
+      const { error: errTanque } = await db.from('tanques').update({ estilo, lote, capacidad, estado_proceso }).eq('id', id);
+      if (errTanque) return alert('Error al actualizar tanque: ' + errTanque.message);
+
+      // Si cambiaste el volumen manualmente, registramos un movimiento de ajuste automático
+      const diferencia = nuevoVolumenDeseado - volumenCalculadoActual;
+      if (diferencia !== 0) {
+        const tipoAjuste = diferencia > 0 ? 'Ajuste Manual (+)' : 'Ajuste Manual (-)';
+        await db.from('movimientos').insert([{
+          tanque_id: id,
+          tipo: tipoAjuste,
+          cantidad: Math.abs(diferencia),
+          operario: 'Administrador'
+        }]);
       }
+
+      alert('✅ Tanque y volumen actualizados correctamente.');
+      init();
     }
 
     function verHistorialTanque(tanqueId) {
@@ -449,15 +433,14 @@
             if (m.tanque_id === tanqueId) desc = `Trasvase (Salida)`;
             else desc = `Trasvase (Entrada - Blend)`;
           }
-          let fechaFormateada = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
-          let operarioNombre = m.operario ? m.operario : '<span style="color:#94a3b8; font-style:italic;">No especificado</span>';
-          
+          let fecha = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
+          let op = m.operario || 'Sistema';
           tablaHistorial.innerHTML = `
             <tr>
-              <td>${fechaFormateada}</td>
-              <td><strong>${operarioNombre}</strong></td>
+              <td>${fecha}</td>
+              <td><strong>${op}</strong></td>
               <td>${desc}</td>
-              <td>${m.cantidad}</td>
+              <td>${m.cantidad} Lts</td>
             </tr>
           `;
         });
@@ -466,42 +449,27 @@
       document.getElementById('historialModal').style.display = 'flex';
     }
 
-    function cerrarHistorial() {
-      document.getElementById('historialModal').style.display = 'none';
-    }
+    function cerrarHistorial() { document.getElementById('historialModal').style.display = 'none'; }
 
     function cambiarTipoMovimientoOperario() {
       const tipo = document.getElementById('opTipoMovimiento').value;
       const divDestino = document.getElementById('divTanqueDestino');
-      const inputCant = document.getElementById('opCantidad');
-
-      if (tipo === 'Trasvase') {
-        divDestino.style.display = 'block';
-        inputCant.placeholder = 'Litros a trasvasar / blendar';
-      } else {
-        divDestino.style.display = 'none';
-        if (tipo === 'Purga') inputCant.placeholder = 'Cantidad en Baldes';
-        else if (tipo === 'Recupero Levadura') inputCant.placeholder = 'Cantidad en Kg';
-        else inputCant.placeholder = 'Cantidad en Litros';
-      }
+      divDestino.style.display = (tipo === 'Trasvase') ? 'block' : 'none';
     }
 
     async function guardarMovimientoOperario() {
       const operario = document.getElementById('opNombreOperario').value.trim();
-      if (!operario) return alert('⚠️ Por favor ingresá tu nombre antes de registrar el movimiento.');
-
+      if (!operario) return alert('⚠️ Ingresá tu nombre.');
       const tipo = document.getElementById('opTipoMovimiento').value;
       const cantidad = document.getElementById('opCantidad').value;
-      if (!cantidad) return alert('⚠️ Ingresá la cantidad');
+      if (!cantidad) return alert('⚠️ Ingresá la cantidad.');
 
       let tanque_destino_id = null;
-
       if (tipo === 'Trasvase') {
         tanque_destino_id = document.getElementById('opTanqueDestino').value;
-        if (!tanque_destino_id) return alert('Seleccioná el tanque receptor para el blend');
+        if (!tanque_destino_id) return alert('Seleccioná el tanque receptor.');
 
         const tanqueDestinoObj = tanquesGlobal.find(x => x.id === tanque_destino_id);
-        
         let nuevoEstilo = tanqueDestinoObj.estilo || '';
         if (tanqueOperarioActual.estilo && !nuevoEstilo.includes(tanqueOperarioActual.estilo)) {
           nuevoEstilo = nuevoEstilo ? `${nuevoEstilo} + ${tanqueOperarioActual.estilo}` : tanqueOperarioActual.estilo;
@@ -519,12 +487,12 @@
         tanque_id: tanqueOperarioActual.id, 
         tipo, 
         cantidad, 
-        tanque_destino_id,
+        tanque_destino_id, 
         operario 
       }]);
 
       if (error) alert('Error: ' + error.message);
-      else { alert('✅ ¡Movimiento registrado con éxito por ' + operario + '!'); location.reload(); }
+      else { alert('✅ ¡Registrado con éxito!'); location.reload(); }
     }
 
     function abrirModalQRs() {
@@ -532,7 +500,8 @@
       printArea.innerHTML = '';
       document.getElementById('qrModal').style.display = 'flex';
 
-      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      // Construcción robusta de la URL base limpia para los QR
+      const baseUrl = window.location.origin + window.location.pathname;
 
       tanquesGlobal.forEach(t => {
         const qrDiv = document.createElement('div');
@@ -551,7 +520,7 @@
 
     function descargarQRIndividual(codigoTanque) {
       const canvasTemp = document.createElement('canvas');
-      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      const baseUrl = window.location.origin + window.location.pathname;
       const targetUrl = `${baseUrl}?tanque=${codigoTanque}`;
 
       QRCode.toCanvas(canvasTemp, targetUrl, { width: 300 }, function (error) {
