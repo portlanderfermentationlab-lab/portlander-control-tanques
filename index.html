@@ -148,30 +148,43 @@
             <strong id="opLote" style="font-size: 14px;">-</strong>
           </div>
         </div>
-        <div style="border-top: 1px solid var(--border); pt: 10px; margin-top: 10px; padding-top: 10px;">
+        <div style="border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px;">
           <span style="font-size: 12px; color: var(--text-muted); display: block;">Volumen Actual / Capacidad Máxima</span>
           <span id="opVolumen" style="font-size: 20px; font-weight: 700; color: var(--accent);">0</span> <span style="font-size: 14px; color: var(--text-muted);">Lts</span>
         </div>
       </div>
       
       <h3 style="font-size: 15px; margin-bottom: 8px;">Registrar Movimiento</h3>
-      <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="margin-bottom: 12px; width: 100%;">
-        <option value="Carga">Carga (Entrada en Lts)</option>
-        <option value="Purga">Purga de Levadura (en Baldes)</option>
-        <option value="Recupero Levadura">Recupero de Levadura (en Kg)</option>
-        <option value="Trasvase">Trasvase a otro Tanque (Blend automático)</option>
-        <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
-        <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
-        <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
-        <option value="Descarga General">Descarga / Limpieza Total (en Lts)</option>
-      </select>
+      
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Tu Nombre (Operario): *</label>
+        <input type="text" id="opNombreOperario" placeholder="Ej: Juan Pérez" style="width: 100%;">
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Tipo de Movimiento:</label>
+        <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="width: 100%;">
+          <option value="Carga">Carga (Entrada en Lts)</option>
+          <option value="Purga">Purga de Levadura (en Baldes)</option>
+          <option value="Recupero Levadura">Recupero de Levadura (en Kg)</option>
+          <option value="Trasvase">Trasvase a otro Tanque (Blend automático)</option>
+          <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
+          <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
+          <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
+          <option value="Descarga General">Descarga / Limpieza Total (en Lts)</option>
+        </select>
+      </div>
 
       <div id="divTanqueDestino" style="display:none; margin-bottom: 12px;">
         <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Tanque Destino:</label>
         <select id="opTanqueDestino" style="width: 100%;"><option value="">Seleccionar tanque receptor...</option></select>
       </div>
 
-      <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="margin-bottom: 20px; width: 100%;">
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Cantidad:</label>
+        <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="width: 100%;">
+      </div>
+
       <button onclick="guardarMovimientoOperario()" style="width: 100%; padding: 14px; font-size: 15px;">Guardar Registro</button>
     </div>
 
@@ -190,7 +203,7 @@
 
       <div class="card">
         <h2>Estado de Tanques</h2>
-        <p>Editá directamente los estilos, lotes, capacidades o estados y hacé clic en guardar en cada fila.</p>
+        <p>Modificá los estilos, lotes, capacidades o estados directamente y guardá cada fila. Los nombres de los tanques son fijos.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -225,13 +238,14 @@
 
   <!-- MODAL DE HISTORIAL DE TANQUE -->
   <div id="historialModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content" style="max-width: 650px;">
       <h2 id="historialTitulo" style="margin-bottom: 20px;">Historial del Tanque</h2>
       <div style="overflow-x: auto; max-height: 350px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
         <table style="margin-top: 0;">
           <thead>
             <tr>
               <th>Fecha / Hora</th>
+              <th>Operario</th>
               <th>Movimiento</th>
               <th>Cantidad</th>
             </tr>
@@ -353,7 +367,10 @@
         const cap = t.capacidad || 1000;
         tbody.innerHTML += `
           <tr>
-            <td><strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong></td>
+            <td>
+              <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong>
+              <br><button onclick="cambiarNombreTanque('${t.id}', '${t.codigo}')" style="background:none; border:none; color:var(--accent); font-size:11px; padding:0; cursor:pointer; margin-top:2px;">✏️ Renombrar</button>
+            </td>
             <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: IPA / APA" style="width: 130px;"></td>
             <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 110px;"></td>
             <td>
@@ -375,6 +392,23 @@
             </td>
           </tr>`;
       });
+    }
+
+    async function cambiarNombreTanque(id, codigoActual) {
+      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para renombrar este tanque:');
+      if (pin === null) return;
+      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
+
+      const nuevoCodigo = prompt(`Ingresá el nuevo nombre/código para el tanque (Actual: ${codigoActual}):`, codigoActual);
+      if (!nuevoCodigo || nuevoCodigo.trim() === '') return;
+
+      const { error } = await db.from('tanques').update({ codigo: nuevoCodigo.trim() }).eq('id', id);
+      if (error) {
+        alert('Error al actualizar el nombre: ' + error.message);
+      } else {
+        alert('✅ Nombre del tanque actualizado con éxito.');
+        init();
+      }
     }
 
     async function guardarFilaTanque(id) {
@@ -407,7 +441,7 @@
       const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
 
       if (movsTanque.length === 0) {
-        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
+        tablaHistorial.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
       } else {
         movsTanque.forEach(m => {
           let desc = m.tipo;
@@ -416,10 +450,13 @@
             else desc = `Trasvase (Entrada - Blend)`;
           }
           let fechaFormateada = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
+          let operarioNombre = m.operario ? m.operario : '<span style="color:#94a3b8; font-style:italic;">No especificado</span>';
+          
           tablaHistorial.innerHTML = `
             <tr>
               <td>${fechaFormateada}</td>
-              <td><strong>${desc}</strong></td>
+              <td><strong>${operarioNombre}</strong></td>
+              <td>${desc}</td>
               <td>${m.cantidad}</td>
             </tr>
           `;
@@ -450,9 +487,12 @@
     }
 
     async function guardarMovimientoOperario() {
+      const operario = document.getElementById('opNombreOperario').value.trim();
+      if (!operario) return alert('⚠️ Por favor ingresá tu nombre antes de registrar el movimiento.');
+
       const tipo = document.getElementById('opTipoMovimiento').value;
       const cantidad = document.getElementById('opCantidad').value;
-      if (!cantidad) return alert('Ingresá la cantidad');
+      if (!cantidad) return alert('⚠️ Ingresá la cantidad');
 
       let tanque_destino_id = null;
 
@@ -479,11 +519,12 @@
         tanque_id: tanqueOperarioActual.id, 
         tipo, 
         cantidad, 
-        tanque_destino_id 
+        tanque_destino_id,
+        operario 
       }]);
 
       if (error) alert('Error: ' + error.message);
-      else { alert('¡Movimiento registrado con éxito!'); location.reload(); }
+      else { alert('✅ ¡Movimiento registrado con éxito por ' + operario + '!'); location.reload(); }
     }
 
     function abrirModalQRs() {
