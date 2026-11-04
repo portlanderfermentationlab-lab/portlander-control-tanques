@@ -6,100 +6,206 @@
   <title>Portlander - Control Cervecero</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #0f172a; --accent: #2563eb; --bg: #f8fafc; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: #334155; }
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 1000px; margin-left: auto; margin-right: auto; }
-    h1, h2, h3 { color: var(--primary); margin-top: 0; }
-    input, select, button { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-    button { background-color: var(--accent); color: white; border: none; font-weight: 600; cursor: pointer; }
-    button:hover { opacity: 0.9; }
-    .btn-secondary { background-color: #64748b; }
-    .btn-save { background-color: #16a34a; padding: 6px 12px; font-size: 12px; }
-    .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; width: auto; display: inline-block; }
-    .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: middle; }
-    th { background-color: var(--primary); color: white; }
+    :root { 
+      --bg: #f8fafc; 
+      --card-bg: #ffffff; 
+      --text-main: #0f172a; 
+      --text-muted: #64748b; 
+      --accent: #2563eb; 
+      --accent-hover: #1d4ed8;
+      --success: #16a34a; 
+      --border: #e2e8f0; 
+    }
     
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
-    .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-top: 15px; }
-    .qr-card { border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; background: #fff; text-align: center; }
-    .qr-card canvas { display: block; margin: 0 auto 8px auto; }
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+      margin: 0; 
+      padding: 24px; 
+      background-color: var(--bg); 
+      color: var(--text-main); 
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card { 
+      background: var(--card-bg); 
+      padding: 24px; 
+      border-radius: 16px; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); 
+      border: 1px solid var(--border);
+      margin-bottom: 24px; 
+    }
+
+    h1, h2, h3 { 
+      color: var(--text-main); 
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-top: 0; 
+    }
+
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-bottom: 8px; }
+
+    p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    input, select { 
+      padding: 10px 14px; 
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      font-size: 14px; 
+      background-color: #fff;
+      color: var(--text-main);
+      box-sizing: border-box; 
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    button { 
+      padding: 10px 16px; 
+      background-color: var(--accent); 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      font-size: 14px;
+      cursor: pointer; 
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      font-family: inherit;
+    }
+
+    button:hover { background-color: var(--accent-hover); }
+    button:active { transform: scale(0.98); }
+
+    .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { background-color: #e2e8f0; }
+
+    .btn-save { background-color: var(--success); padding: 8px 14px; font-size: 13px; }
+    .btn-save:hover { background-color: #15803d; }
+
+    .btn-qr { background-color: #4f46e5; padding: 8px 14px; font-size: 13px; }
+    .btn-qr:hover { background-color: #4338ca; }
+
+    .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
+    .clickable-tanque:hover { text-decoration: underline; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
+    th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    tr:hover td { background-color: #fafafa; }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    
+    .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
+    .qr-card { border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: #fff; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .qr-card canvas { display: block; margin: 0 auto 10px auto; }
+    
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #f1f5f9; color: var(--text-muted); }
   </style>
 </head>
 <body>
 
-  <!-- PANTALLA DE LOGIN ADMIN -->
-  <div id="vistaLoginAdmin" class="card" style="margin-top: 50px; text-align: center; display:none;">
-    <h2>🔐 Acceso Administrativo</h2>
-    <p style="font-size: 13px; color: #64748b;">Ingrese el PIN de administrador para ver el panel general de la planta.</p>
-    <input type="password" id="inputPinAdmin" placeholder="PIN de Administrador" style="margin-bottom: 15px; text-align: center; font-size: 18px; max-width: 300px; width: 100%;">
-    <br>
-    <button onclick="verificarPinAdmin()" style="padding: 12px; max-width: 300px; width: 100%;">Ingresar al Panel</button>
-  </div>
-
-  <!-- VISTA OPERARIO (Escaneo de QR) -->
-  <div id="vistaOperario" class="card" style="display:none;">
-    <h2 id="opTanqueCodigo" style="text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 8px;">Tanque ---</h2>
-    
-    <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <p style="margin: 6px 0;"><strong>Estilo(s):</strong> <span id="opEstilo">-</span></p>
-      <p style="margin: 6px 0;"><strong>Lote(s):</strong> <span id="opLote">-</span></p>
-      <p style="margin: 6px 0;"><strong>Estado:</strong> <span id="opEstado">-</span></p>
-      <p style="margin: 6px 0; font-size: 16px;"><strong>Volumen Actual / Capacidad:</strong> <span id="opVolumen" style="font-weight: bold; color: var(--accent);">0</span> Lts</p>
-    </div>
-    
-    <h3>Registrar Movimiento</h3>
-    <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="margin-bottom: 10px; width: 100%;">
-      <option value="Carga">Carga (Entrada en Lts)</option>
-      <option value="Purga">Purga de Levadura (en Baldes)</option>
-      <option value="Recupero Levadura">Recupero de Levadura (en Kg)</option>
-      <option value="Trasvase">Trasvase a otro Tanque (Blend automático)</option>
-      <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
-      <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
-      <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
-      <option value="Descarga General">Descarga / Limpieza Total (en Lts)</option>
-    </select>
-
-    <div id="divTanqueDestino" style="display:none; margin-bottom: 10px;">
-      <label style="font-size: 12px; font-weight: bold;">Tanque Destino:</label>
-      <select id="opTanqueDestino" style="width: 100%;"><option value="">Seleccionar tanque receptor...</option></select>
+  <div class="container">
+    <!-- PANTALLA DE LOGIN ADMIN -->
+    <div id="vistaLoginAdmin" class="card" style="max-width: 420px; margin: 80px auto; text-align: center; display:none;">
+      <div style="font-size: 36px; margin-bottom: 10px;">🍺</div>
+      <h2>Panel de Acceso</h2>
+      <p style="margin-bottom: 24px;">Ingresá el PIN de administración para gestionar la planta.</p>
+      <input type="password" id="inputPinAdmin" placeholder="••••" style="margin-bottom: 16px; text-align: center; font-size: 20px; letter-spacing: 4px; width: 100%;">
+      <button onclick="verificarPinAdmin()" style="width: 100%; padding: 12px;">Ingresar al Sistema</button>
     </div>
 
-    <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="margin-bottom: 15px; width: 100%;">
-    <button onclick="guardarMovimientoOperario()" style="padding: 14px; font-size: 16px; width: 100%;">Guardar Registro</button>
-  </div>
+    <!-- VISTA OPERARIO (Escaneo de QR) -->
+    <div id="vistaOperario" class="card" style="max-width: 500px; margin: 40px auto; display:none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px;">
+        <h2 id="opTanqueCodigo" style="margin: 0; font-size: 22px;">Tanque ---</h2>
+        <span class="badge" id="opEstado">-</span>
+      </div>
+      
+      <div style="background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <span style="font-size: 12px; color: var(--text-muted); display: block;">Estilo(s)</span>
+            <strong id="opEstilo" style="font-size: 14px;">-</strong>
+          </div>
+          <div>
+            <span style="font-size: 12px; color: var(--text-muted); display: block;">Lote(s)</span>
+            <strong id="opLote" style="font-size: 14px;">-</strong>
+          </div>
+        </div>
+        <div style="border-top: 1px solid var(--border); pt: 10px; margin-top: 10px; padding-top: 10px;">
+          <span style="font-size: 12px; color: var(--text-muted); display: block;">Volumen Actual / Capacidad Máxima</span>
+          <span id="opVolumen" style="font-size: 20px; font-weight: 700; color: var(--accent);">0</span> <span style="font-size: 14px; color: var(--text-muted);">Lts</span>
+        </div>
+      </div>
+      
+      <h3 style="font-size: 15px; margin-bottom: 8px;">Registrar Movimiento</h3>
+      <select id="opTipoMovimiento" onchange="cambiarTipoMovimientoOperario()" style="margin-bottom: 12px; width: 100%;">
+        <option value="Carga">Carga (Entrada en Lts)</option>
+        <option value="Purga">Purga de Levadura (en Baldes)</option>
+        <option value="Recupero Levadura">Recupero de Levadura (en Kg)</option>
+        <option value="Trasvase">Trasvase a otro Tanque (Blend automático)</option>
+        <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
+        <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
+        <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
+        <option value="Descarga General">Descarga / Limpieza Total (en Lts)</option>
+      </select>
 
-  <!-- VISTA ADMIN / DASHBOARD GENERAL -->
-  <div id="vistaDashboard" style="display:none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h1>🍺 Portlander - Control de Tanques (Multi-Lote y Blend)</h1>
-      <button onclick="cerrarSesionAdmin()" class="btn-secondary" style="width: auto; padding: 8px 14px;">Cerrar Sesión</button>
+      <div id="divTanqueDestino" style="display:none; margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Tanque Destino:</label>
+        <select id="opTanqueDestino" style="width: 100%;"><option value="">Seleccionar tanque receptor...</option></select>
+      </div>
+
+      <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="margin-bottom: 20px; width: 100%;">
+      <button onclick="guardarMovimientoOperario()" style="width: 100%; padding: 14px; font-size: 15px;">Guardar Registro</button>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-      <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Ver y Descargar QRs de Planta</button>
-    </div>
+    <!-- VISTA ADMIN / DASHBOARD GENERAL -->
+    <div id="vistaDashboard" style="display:none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+          <h1>Control de Tanques</h1>
+          <p>Panel operativo y gestión de planta en tiempo real.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR</button>
+          <button onclick="cerrarSesionAdmin()" class="btn-secondary">Cerrar Sesión</button>
+        </div>
+      </div>
 
-    <div class="card">
-      <h2>📊 Estado y Gestión de Tanques (Múltiples Estilos / Lotes)</h2>
-      <p style="font-size: 12px; color: #64748b; margin-top: 0;">Podés escribir múltiples estilos separados por barra (ej: <i>IPA / APA</i>) o lotes combinados (ej: <i>L-01 + L-02</i>). Hacé clic en el código del tanque para ver su historial.</p>
-      <div style="overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Tanque</th>
-              <th>Estilo(s)</th>
-              <th>Lote(s)</th>
-              <th>Vol. Actual / Cap. Máx</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaTanques"></tbody>
-        </table>
+      <div class="card">
+        <h2>Estado de Tanques</h2>
+        <p>Editá directamente los estilos, lotes, capacidades o estados y hacé clic en guardar en cada fila.</p>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanque</th>
+                <th>Estilo(s)</th>
+                <th>Lote(s)</th>
+                <th>Volumen / Capacidad</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaTanques"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -107,11 +213,11 @@
   <!-- MODAL DE QRs -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
-      <h3>Códigos QR Fijos de Planta</h3>
-      <p style="font-size: 12px; color: #64748b;">Descargá las imágenes para enviar a imprimir.</p>
-      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
-        <button onclick="window.print()" style="width: auto;">🖨️ Imprimir Todos</button>
-        <button onclick="cerrarModal()" class="btn-secondary" style="width: auto;">Cerrar Ventana</button>
+      <h2>Códigos QR de Planta</h2>
+      <p>Imprimí o descargá los códigos QR individuales para cada tanque.</p>
+      <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
+        <button onclick="window.print()">🖨️ Imprimir Todos</button>
+        <button onclick="cerrarModal()" class="btn-secondary">Cerrar Ventana</button>
       </div>
       <div id="printArea" class="qr-grid"></div>
     </div>
@@ -119,10 +225,10 @@
 
   <!-- MODAL DE HISTORIAL DE TANQUE -->
   <div id="historialModal" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
-      <h3 id="historialTitulo">Historial del Tanque</h3>
-      <div style="overflow-x: auto; max-height: 400px; margin-bottom: 15px;">
-        <table style="width: 100%; font-size: 13px;">
+    <div class="modal-content" style="max-width: 600px;">
+      <h2 id="historialTitulo" style="margin-bottom: 20px;">Historial del Tanque</h2>
+      <div style="overflow-x: auto; max-height: 350px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
+        <table style="margin-top: 0;">
           <thead>
             <tr>
               <th>Fecha / Hora</th>
@@ -133,7 +239,7 @@
           <tbody id="tablaHistorialTanque"></tbody>
         </table>
       </div>
-      <button onclick="cerrarHistorial()" class="btn-secondary" style="width: auto;">Cerrar Historial</button>
+      <button onclick="cerrarHistorial()" class="btn-secondary">Cerrar Historial</button>
     </div>
   </div>
 
@@ -194,7 +300,7 @@
             document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
             document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
             document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible';
-            document.getElementById('opVolumen').innerText = `${tanqueOperarioActual.actual} / ${tanqueOperarioActual.capacidad || 1000}`;
+            document.getElementById('opVolumen').innerText = tanqueOperarioActual.actual;
 
             const selDestino = document.getElementById('opTanqueDestino');
             selDestino.innerHTML = '<option value="">Seleccionar tanque receptor...</option>';
@@ -248,10 +354,10 @@
         tbody.innerHTML += `
           <tr>
             <td><strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong></td>
-            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: IPA / APA" style="width: 140px;"></td>
-            <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 120px;"></td>
+            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: IPA / APA" style="width: 130px;"></td>
+            <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 110px;"></td>
             <td>
-              ${t.actual} / <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 70px; display:inline-block;"> Lts
+              <span style="font-weight: 600;">${t.actual}</span> / <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 70px; display:inline-block;"> Lts
             </td>
             <td>
               <select id="estado-${t.id}" style="width: 110px;">
@@ -262,7 +368,7 @@
               </select>
             </td>
             <td>
-              <div style="display: flex; gap: 4px;">
+              <div style="display: flex; gap: 6px;">
                 <button class="btn-save" onclick="guardarFilaTanque('${t.id}')">💾 Guardar</button>
                 <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 QR</button>
               </div>
@@ -294,14 +400,14 @@
       const tanque = tanquesGlobal.find(t => t.id === tanqueId);
       if (!tanque) return;
 
-      document.getElementById('historialTitulo').innerText = `Historial de Movimientos - ${tanque.codigo}`;
+      document.getElementById('historialTitulo').innerText = `Historial - Tanque ${tanque.codigo}`;
       const tablaHistorial = document.getElementById('tablaHistorialTanque');
       tablaHistorial.innerHTML = '';
 
       const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
 
       if (movsTanque.length === 0) {
-        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">No hay movimientos registrados.</td></tr>`;
+        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
       } else {
         movsTanque.forEach(m => {
           let desc = m.tipo;
@@ -356,7 +462,6 @@
 
         const tanqueDestinoObj = tanquesGlobal.find(x => x.id === tanque_destino_id);
         
-        // Combinar estilos y lotes automáticamente al hacer el blend
         let nuevoEstilo = tanqueDestinoObj.estilo || '';
         if (tanqueOperarioActual.estilo && !nuevoEstilo.includes(tanqueOperarioActual.estilo)) {
           nuevoEstilo = nuevoEstilo ? `${nuevoEstilo} + ${tanqueOperarioActual.estilo}` : tanqueOperarioActual.estilo;
@@ -378,7 +483,7 @@
       }]);
 
       if (error) alert('Error: ' + error.message);
-      else { alert('¡Movimiento y blend registrados con éxito!'); location.reload(); }
+      else { alert('¡Movimiento registrado con éxito!'); location.reload(); }
     }
 
     function abrirModalQRs() {
@@ -394,7 +499,7 @@
         qrDiv.innerHTML = `
           <strong>${t.codigo}</strong><br>
           <canvas id="canvas-${t.id}"></canvas>
-          <button onclick="descargarQRIndividual('${t.codigo}')" style="font-size: 11px; padding: 6px; margin-top: 5px;">📥 Descargar</button>
+          <button onclick="descargarQRIndividual('${t.codigo}')" class="btn-secondary" style="font-size: 11px; padding: 6px; margin-top: 8px; width: 100%;">📥 Descargar</button>
         `;
         printArea.appendChild(qrDiv);
 
