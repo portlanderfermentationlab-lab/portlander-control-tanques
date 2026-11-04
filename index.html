@@ -16,6 +16,8 @@
     button { background-color: var(--accent); color: white; border: none; font-weight: 600; cursor: pointer; }
     button:hover { opacity: 0.9; }
     .btn-secondary { background-color: #64748b; }
+    .btn-danger { background-color: #dc2626; }
+    .btn-danger:hover { background-color: #b91c1c; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
     th { background-color: var(--primary); color: white; }
@@ -65,14 +67,14 @@
   <div id="vistaDashboard">
     <h1>🍺 Portlander - Control de Tanques</h1>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
       <button onclick="generar26Tanques()" class="btn-secondary" style="width: auto;">⚡ Auto-crear 26 Tanques</button>
       <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Imprimir QRs Fijos (26 Tanques)</button>
     </div>
 
-    <!-- EDICIÓN / REGISTRO DE TANQUE -->
+    <!-- EDICIÓN / REGISTRO / ELIMINACIÓN DE TANQUE -->
     <div class="card">
-      <h2>Actualizar Estado de Tanque</h2>
+      <h2>Actualizar o Eliminar Tanque</h2>
       <div class="grid-form">
         <select id="selectTanqueEdit" onchange="cargarDatosEdicion()"><option value="">Seleccionar Tanque...</option></select>
         <input type="text" id="editEstilo" placeholder="Estilo Cerveza (ej. IPA)">
@@ -84,7 +86,10 @@
           <option value="Listo">Listo para Envasar</option>
         </select>
       </div>
-      <button onclick="actualizarTanque()">Guardar Cambios en Tanque</button>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button onclick="actualizarTanque()" style="flex: 2;">Guardar Cambios en Tanque</button>
+        <button onclick="eliminarTanqueAdmin()" class="btn-danger" style="flex: 1;">🗑️ Eliminar Tanque</button>
+      </div>
     </div>
 
     <!-- REGISTRO DE MOVIMIENTOS -->
@@ -107,7 +112,7 @@
 
     <!-- ESTADO DE LA PLANTA -->
     <div class="card">
-      <h2>Estado de los 26 Tanques</h2>
+      <h2>Estado de los Tanques</h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -142,10 +147,12 @@
     const SUPABASE_KEY = 'sb_publishable_W6LgismF0FuJY18qMS5yDA_h5jCUGyH';
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // CONTRASEÑA DE ADMINISTRADOR PARA ELIMINAR TANQUES
+    const ADMIN_PIN = "2026"; 
+
     let tanquesGlobal = [];
     let tanqueOperarioActual = null;
 
-    // Detectar si se ingresó escaneando un QR (?tanque=TNQ-XX)
     const urlParams = new URLSearchParams(window.location.search);
     const codigoTanqueQR = urlParams.get('tanque');
 
@@ -160,7 +167,6 @@
       tanquesGlobal = resTanques.data || [];
       const movimientos = resMovs.data || [];
 
-      // Calcular litros por tanque
       const volumenes = {};
       movimientos.forEach(m => {
         if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
@@ -174,7 +180,6 @@
       });
 
       if (codigoTanqueQR) {
-        // MODO OPERARIO
         document.getElementById('vistaDashboard').style.display = 'none';
         document.getElementById('vistaOperario').style.display = 'block';
         tanqueOperarioActual = tanquesGlobal.find(t => t.codigo === codigoTanqueQR);
@@ -189,7 +194,6 @@
           alert('Tanque no encontrado');
         }
       } else {
-        // MODO DASHBOARD
         renderDashboard();
       }
     }
@@ -220,7 +224,6 @@
       });
     }
 
-    // Auto-crear los 26 tanques si no existen
     async function generar26Tanques() {
       if (!confirm('¿Deseas crear automáticamente los 26 tanques (TNQ-01 al TNQ-26)?')) return;
       const tanquesAInsertar = [];
@@ -255,6 +258,33 @@
       else { alert('Tanque actualizado'); init(); }
     }
 
+    // ELIMINAR TANQUE CON CLAVE DE ADMIN
+    async function eliminarTanqueAdmin() {
+      const id = document.getElementById('selectTanqueEdit').value;
+      if (!id) return alert('Seleccioná un tanque para eliminar');
+
+      const tanqueSeleccionado = tanquesGlobal.find(x => x.id === id);
+      const pinIngresado = prompt(`⚠️ ATENCIÓN: Estás por eliminar el tanque ${tanqueSeleccionado.codigo}.\n\nIngresá la clave de administrador para confirmar:`);
+
+      if (pinIngresado === null) return; // Cancelado
+
+      if (pinIngresado !== ADMIN_PIN) {
+        return alert('❌ Clave incorrecta. No se pudo eliminar el tanque.');
+      }
+
+      // Borrar primero los movimientos asociados al tanque para evitar errores de base de datos
+      await db.from('movimientos').delete().eq('tanque_id', id);
+
+      // Borrar el tanque
+      const { error } = await db.from('tanques').delete().eq('id', id);
+      if (error) {
+        alert('Error al eliminar: ' + error.message);
+      } else {
+        alert('✅ Tanque eliminado correctamente.');
+        init();
+      }
+    }
+
     async function guardarMovimientoAdmin() {
       const tanque_id = document.getElementById('selectTanqueMov').value;
       const tipo = document.getElementById('tipoMovimiento').value;
@@ -276,7 +306,6 @@
       else { alert('¡Movimiento registrado!'); location.reload(); }
     }
 
-    // Modal para imprimir los 26 QRs
     function abrirModalQRs() {
       const printArea = document.getElementById('printArea');
       printArea.innerHTML = '';
@@ -300,4 +329,5 @@
     init();
   </script>
 </body>
+</html>
 </html>
