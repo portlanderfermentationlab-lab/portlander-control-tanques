@@ -45,7 +45,7 @@
     <button onclick="verificarPinAdmin()" style="padding: 12px;">Ingresar al Panel</button>
   </div>
 
-  <!-- VISTA OPERARIO (Se activa al escanear QR) -->
+  <!-- VISTA OPERARIO -->
   <div id="vistaOperario" class="card" style="display:none;">
     <h2 id="opTanqueCodigo" style="text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 8px;">Tanque ---</h2>
     
@@ -88,7 +88,6 @@
       <button onclick="abrirModalQRs()" style="width: auto; background-color: #4f46e5;">🖨️ Ver y Descargar QRs de Planta</button>
     </div>
 
-    <!-- EDICIÓN / ELIMINACIÓN DE TANQUE PROTEGIDA -->
     <div class="card" style="max-width: 100%;">
       <h2>Actualizar o Eliminar Tanque</h2>
       <div class="grid-form">
@@ -108,7 +107,6 @@
       </div>
     </div>
 
-    <!-- ESTADO DE LA PLANTA -->
     <div class="card" style="max-width: 100%;">
       <h2>Estado de los Tanques</h2>
       <div style="overflow-x: auto;">
@@ -156,67 +154,73 @@
     const codigoTanqueQR = urlParams.get('tanque');
 
     async function init() {
-      const [resTanques, resMovs] = await Promise.all([
-        db.from('tanques').select('*').order('codigo', { ascending: true }),
-        db.from('movimientos').select('*')
-      ]);
+      try {
+        const [resTanques, resMovs] = await Promise.all([
+          db.from('tanques').select('*').order('codigo', { ascending: true }),
+          db.from('movimientos').select('*')
+        ]);
 
-      if (resTanques.error) return alert('Error conectando a la base de datos');
-
-      tanquesGlobal = resTanques.data || [];
-      const movimientos = resMovs.data || [];
-
-      const volumenes = {};
-      movimientos.forEach(m => {
-        if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
-        const cant = parseFloat(m.cantidad) || 0;
-        
-        if (m.tipo === 'Carga') {
-          volumenes[m.tanque_id] += cant;
-        } else if (m.tipo === 'Trasvase' && m.tanque_destino_id) {
-          volumenes[m.tanque_id] -= cant;
-          if (!volumenes[m.tanque_destino_id]) volumenes[m.tanque_destino_id] = 0;
-          volumenes[m.tanque_destino_id] += cant;
-        } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura') {
-          volumenes[m.tanque_id] -= cant;
+        if (resTanques.error) {
+          alert('Error conectando a la base de datos: ' + resTanques.error.message);
+          return;
         }
-      });
 
-      tanquesGlobal.forEach(t => {
-        t.actual = Math.max(0, volumenes[t.id] || 0);
-      });
+        tanquesGlobal = resTanques.data || [];
+        const movimientos = resMovs.data || [];
 
-      if (codigoTanqueQR) {
-        // MODO OPERARIO: Escaneó QR
-        document.getElementById('vistaOperario').style.display = 'block';
-        tanqueOperarioActual = tanquesGlobal.find(t => t.codigo === codigoTanqueQR);
-        
-        if (tanqueOperarioActual) {
-          document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
-          document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
-          document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
-          document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible';
-          document.getElementById('opVolumen').innerText = tanqueOperarioActual.actual;
+        const volumenes = {};
+        movimientos.forEach(m => {
+          if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
+          const cant = parseFloat(m.cantidad) || 0;
+          
+          if (m.tipo === 'Carga') {
+            volumenes[m.tanque_id] += cant;
+          } else if (m.tipo === 'Trasvase' && m.tanque_destino_id) {
+            volumenes[m.tanque_id] -= cant;
+            if (!volumenes[m.tanque_destino_id]) volumenes[m.tanque_destino_id] = 0;
+            volumenes[m.tanque_destino_id] += cant;
+          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura') {
+            volumenes[m.tanque_id] -= cant;
+          }
+        });
 
-          const selDestino = document.getElementById('opTanqueDestino');
-          selDestino.innerHTML = '<option value="">Seleccionar tanque receptor...</option>';
-          tanquesGlobal.forEach(t => {
-            if (t.id !== tanqueOperarioActual.id) {
-              selDestino.innerHTML += `<option value="${t.id}">${t.codigo} - ${t.estilo || 'Vacío'}</option>`;
-            }
-          });
+        tanquesGlobal.forEach(t => {
+          t.actual = Math.max(0, volumenes[t.id] || 0);
+        });
+
+        if (codigoTanqueQR) {
+          document.getElementById('vistaOperario').style.display = 'block';
+          tanqueOperarioActual = tanquesGlobal.find(t => t.codigo === codigoTanqueQR);
+          
+          if (tanqueOperarioActual) {
+            document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
+            document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
+            document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
+            document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible';
+            document.getElementById('opVolumen').innerText = tanqueOperarioActual.actual;
+
+            const selDestino = document.getElementById('opTanqueDestino');
+            selDestino.innerHTML = '<option value="">Seleccionar tanque receptor...</option>';
+            tanquesGlobal.forEach(t => {
+              if (t.id !== tanqueOperarioActual.id) {
+                selDestino.innerHTML += `<option value="${t.id}">${t.codigo} - ${t.estilo || 'Vacío'}</option>`;
+              }
+            });
+          } else {
+            alert('Tanque no encontrado');
+          }
         } else {
-          alert('Tanque no encontrado');
+          const adminLogueado = sessionStorage.getItem('admin_auth');
+          if (adminLogueado === 'true') {
+            document.getElementById('vistaDashboard').style.display = 'block';
+            renderDashboard();
+          } else {
+            document.getElementById('vistaLoginAdmin').style.display = 'block';
+          }
         }
-      } else {
-        // MODO ADMIN: Validar si ya inició sesión en esta pestaña
-        const adminLogueado = sessionStorage.getItem('admin_auth');
-        if (adminLogueado === 'true') {
-          document.getElementById('vistaDashboard').style.display = 'block';
-          renderDashboard();
-        } else {
-          document.getElementById('vistaLoginAdmin').style.display = 'block';
-        }
+      } catch (e) {
+        console.error(e);
+        alert('Ocurrió un error al iniciar la aplicación.');
       }
     }
 
@@ -379,3 +383,21 @@
 
     function descargarQRIndividual(codigoTanque) {
       const canvasTemp = document.createElement('canvas');
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      const targetUrl = `${baseUrl}?tanque=${codigoTanque}`;
+
+      QRCode.toCanvas(canvasTemp, targetUrl, { width: 300 }, function (error) {
+        if (error) return alert('Error generando QR');
+        const link = document.createElement('a');
+        link.download = `QR_${codigoTanque}.png`;
+        link.href = canvasTemp.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    function cerrarModal() { document.getElementById('qrModal').style.display = 'none'; }
+
+    init();
+  </script>
+</body>
+</html>
