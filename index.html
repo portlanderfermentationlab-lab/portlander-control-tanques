@@ -19,6 +19,7 @@
     .btn-danger { background-color: #dc2626; }
     .btn-danger:hover { background-color: #b91c1c; }
     .btn-qr { background-color: #4f46e5; padding: 6px 12px; font-size: 12px; width: auto; display: inline-block; margin-right: 4px; }
+    .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
     th { background-color: var(--primary); color: white; }
@@ -124,7 +125,7 @@
 
     <!-- ESTADO DE LA PLANTA -->
     <div class="card">
-      <h2>📊 Estado de la Planta</h2>
+      <h2>📊 Estado de la Planta <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Hacé clic en el código de un tanque para ver su historial)</span></h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -157,6 +158,26 @@
     </div>
   </div>
 
+  <!-- MODAL DE HISTORIAL DE TANQUE -->
+  <div id="historialModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <h3 id="historialTitulo">Historial del Tanque</h3>
+      <div style="overflow-x: auto; max-height: 400px; margin-bottom: 15px;">
+        <table style="width: 100%; font-size: 13px;">
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Movimiento</th>
+              <th>Cantidad</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialTanque"></tbody>
+        </table>
+      </div>
+      <button onclick="cerrarHistorial()" class="btn-secondary" style="width: auto;">Cerrar Historial</button>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://lkaiklforufoirqlrczo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_W6LgismF0FuJY18qMS5yDA_h5jCUGyH';
@@ -164,6 +185,7 @@
 
     const ADMIN_PIN = "2026"; 
     let tanquesGlobal = [];
+    let movimientosGlobal = [];
     let tanqueOperarioActual = null;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -173,7 +195,7 @@
       try {
         const [resTanques, resMovs] = await Promise.all([
           db.from('tanques').select('*').order('codigo', { ascending: true }),
-          db.from('movimientos').select('*')
+          db.from('movimientos').select('*').order('created_at', { ascending: false })
         ]);
 
         if (resTanques.error) {
@@ -182,10 +204,10 @@
         }
 
         tanquesGlobal = resTanques.data || [];
-        const movimientos = resMovs.data || [];
+        movimientosGlobal = resMovs.data || [];
 
         const volumenes = {};
-        movimientos.forEach(m => {
+        movimientosGlobal.forEach(m => {
           if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
           const cant = parseFloat(m.cantidad) || 0;
           
@@ -270,7 +292,7 @@
         const porc = Math.min(100, Math.round((t.actual / cap) * 100));
         tbody.innerHTML += `
           <tr>
-            <td><strong>${t.codigo}</strong></td>
+            <td><strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong></td>
             <td>${t.estilo || '-'}</td>
             <td>${t.lote || '-'}</td>
             <td>${t.actual} / ${cap} Lts</td>
@@ -283,6 +305,45 @@
 
         selEdit.innerHTML += `<option value="${t.id}">${t.codigo} (Cap: ${cap} Lts)</option>`;
       });
+    }
+
+    // VER HISTORIAL DE UN TANQUE ESPECÍFICO
+    function verHistorialTanque(tanqueId) {
+      const tanque = tanquesGlobal.find(t => t.id === tanqueId);
+      if (!tanque) return;
+
+      document.getElementById('historialTitulo').innerText = `Historial de Movimientos - ${tanque.codigo} (${tanque.estilo || 'Sin estilo'})`;
+      const tablaHistorial = document.getElementById('tablaHistorialTanque');
+      tablaHistorial.innerHTML = '';
+
+      // Filtrar movimientos donde este tanque sea origen o destino
+      const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
+
+      if (movsTanque.length === 0) {
+        tablaHistorial.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #64748b;">No hay movimientos registrados para este tanque.</td></tr>`;
+      } else {
+        movsTanque.forEach(m => {
+          let desc = m.tipo;
+          if (m.tipo === 'Trasvase') {
+            if (m.tanque_id === tanqueId) desc = `Trasvase (Salida a otro tanque)`;
+            else desc = `Trasvase (Entrada desde otro tanque)`;
+          }
+          let fechaFormateada = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
+          tablaHistorial.innerHTML = `
+            <tr>
+              <td>${fechaFormateada}</td>
+              <td><strong>${desc}</strong></td>
+              <td>${m.cantidad}</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('historialModal').style.display = 'flex';
+    }
+
+    function cerrarHistorial() {
+      document.getElementById('historialModal').style.display = 'none';
     }
 
     function cambiarTipoMovimientoOperario() {
@@ -312,7 +373,6 @@
       }
     }
 
-    // CREAR TANQUE MANUAL PROTEGIDO POR PIN
     async function crearTanqueAdmin() {
       const codigo = document.getElementById('nuevoCodigo').value.trim();
       const capacidad = document.getElementById('nuevoCapacidad').value;
@@ -330,7 +390,6 @@
       else { alert('✅ Tanque creado con éxito.'); location.reload(); }
     }
 
-    // ACTUALIZAR TANQUE (CAPACIDAD, ESTILO, LOTE, ESTADO) PROTEGIDO POR PIN
     async function actualizarTanqueAdmin() {
       const id = document.getElementById('selectTanqueEdit').value;
       if (!id) return alert('Seleccioná un tanque');
