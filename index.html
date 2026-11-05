@@ -16,6 +16,7 @@
       --accent: #2563eb; 
       --accent-hover: #1d4ed8;
       --success: #16a34a; 
+      --danger: #dc2626;
       --border: #e2e8f0; 
     }
     
@@ -28,7 +29,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 1100px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
 
     .card { 
       background: var(--card-bg); 
@@ -79,6 +80,9 @@
     .btn-qr { background-color: #4f46e5; }
     .btn-qr:hover { background-color: #4338ca; }
 
+    .btn-danger { background-color: var(--danger); padding: 4px 8px; font-size: 11px; }
+    .btn-danger:hover { background-color: #b91c1c; }
+
     .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
     .clickable-tanque:hover { text-decoration: underline; }
 
@@ -88,7 +92,7 @@
     tr:hover td { background-color: #fafafa; }
     
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     
     .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
     .qr-card { border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: #fff; text-align: center; }
@@ -125,6 +129,10 @@
             <span style="font-size: 12px; color: var(--text-muted); display: block;">Lote(s)</span>
             <strong id="opLote" style="font-size: 14px;">-</strong>
           </div>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <span style="font-size: 12px; color: var(--text-muted); display: block;">Observaciones / Litros por Lote</span>
+          <span id="opObservaciones" style="font-size: 13px; color: var(--text-main);">-</span>
         </div>
         <div style="border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px;">
           <span style="font-size: 12px; color: var(--text-muted); display: block;">Volumen Actual / Capacidad Máxima</span>
@@ -171,7 +179,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1>Control de Tanques (Admin)</h1>
-          <p>Gestión completa de planta, estilos múltiples, blends y ajustes directos.</p>
+          <p>Gestión completa de planta, estilos múltiples, estados extendidos y ajustes.</p>
         </div>
         <div style="display: flex; gap: 10px;">
           <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR</button>
@@ -181,15 +189,15 @@
 
       <div class="card">
         <h2>Listado General de Tanques</h2>
-        <p>Aquí podés modificar estilos, lotes, estados y **el volumen actual directamente** desde la computadora.</p>
+        <p>Modificá estilos, lotes, observaciones de volúmenes, estados y volúmenes actuales con sesión persistente (sin pedir PIN repetidamente).</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
               <tr>
                 <th>Tanque</th>
-                <th>Estilo(s)</th>
-                <th>Lote(s)</th>
-                <th>Volumen Actual / Cap.</th>
+                <th>Estilo(s) y Lote(s)</th>
+                <th>Observaciones (Detalle Lotes)</th>
+                <th>Volumen / Cap.</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -216,7 +224,7 @@
 
   <!-- MODAL HISTORIAL -->
   <div id="historialModal" class="modal">
-    <div class="modal-content" style="max-width: 650px;">
+    <div class="modal-content" style="max-width: 750px;">
       <h2 id="historialTitulo" style="margin-bottom: 20px;">Historial del Tanque</h2>
       <div style="overflow-x: auto; max-height: 350px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
         <table style="margin-top: 0;">
@@ -226,6 +234,7 @@
               <th>Operario</th>
               <th>Movimiento</th>
               <th>Cantidad</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tablaHistorialTanque"></tbody>
@@ -247,6 +256,16 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const codigoTanqueQR = urlParams.get('tanque');
+
+    const opcionesEstados = [
+      "Vacío sucio",
+      "Disponible sanitizado",
+      "Fermentando",
+      "Madurando",
+      "Filtrada",
+      "Carbonatando",
+      "Lista"
+    ];
 
     async function init() {
       try {
@@ -291,7 +310,8 @@
             document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
             document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
             document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
-            document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible';
+            document.getElementById('opObservaciones').innerText = tanqueOperarioActual.observaciones || 'Sin detalles';
+            document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible sanitizado';
             document.getElementById('opVolumen').innerText = tanqueOperarioActual.actual;
 
             const selDestino = document.getElementById('opTanqueDestino');
@@ -343,24 +363,33 @@
 
       tanquesGlobal.forEach(t => {
         const cap = t.capacidad || 1000;
+        
+        let opcionesHTML = '';
+        opcionesEstados.forEach(est => {
+          const sel = (t.estado_proceso === est) ? 'selected' : '';
+          opcionesHTML += `<option value="${est}" ${sel}>${est}</option>`;
+        });
+
         tbody.innerHTML += `
           <tr>
             <td>
               <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong>
               <br><button onclick="cambiarNombreTanque('${t.id}', '${t.codigo}')" style="background:none; border:none; color:var(--accent); font-size:11px; padding:0; cursor:pointer; margin-top:2px;">✏️ Renombrar</button>
             </td>
-            <td><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Ej: Pilsen + Hops" style="width: 120px;"></td>
-            <td><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Ej: L-01 + L-02" style="width: 110px;"></td>
             <td>
-              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 65px;" title="Volumen actual"> / 
-              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 65px;" title="Capacidad máxima"> L
+              <div style="margin-bottom: 4px;"><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Estilo(s)" style="width: 130px;"></div>
+              <div><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Lote(s)" style="width: 130px;"></div>
             </td>
             <td>
-              <select id="estado-${t.id}" style="width: 105px;">
-                <option value="Disponible" ${t.estado_proceso === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                <option value="Fermentando" ${t.estado_proceso === 'Fermentando' ? 'selected' : ''}>Fermentando</option>
-                <option value="Madurando" ${t.estado_proceso === 'Madurando' ? 'selected' : ''}>Madurando</option>
-                <option value="Listo" ${t.estado_proceso === 'Listo' ? 'selected' : ''}>Listo</option>
+              <input type="text" id="observaciones-${t.id}" value="${t.observaciones || ''}" placeholder="Ej: Lote 1: 500L, Lote 2: 300L" style="width: 180px;">
+            </td>
+            <td>
+              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 60px;" title="Volumen actual"> / 
+              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 60px;" title="Capacidad máxima"> L
+            </td>
+            <td>
+              <select id="estado-${t.id}" style="width: 135px;">
+                ${opcionesHTML}
               </select>
             </td>
             <td>
@@ -374,8 +403,6 @@
     }
 
     async function cambiarNombreTanque(id, codigoActual) {
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026):');
-      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
       const nuevoCodigo = prompt('Nuevo nombre/código del tanque:', codigoActual);
       if (!nuevoCodigo || !nuevoCodigo.trim()) return;
 
@@ -385,20 +412,16 @@
     }
 
     async function guardarFilaTanque(id, volumenCalculadoActual) {
-      const pin = prompt('🔒 Ingresá el PIN de Administrador (2026) para confirmar cambios:');
-      if (pin !== ADMIN_PIN) return alert('❌ PIN incorrecto.');
-
       const estilo = document.getElementById(`estilo-${id}`).value;
       const lote = document.getElementById(`lote-${id}`).value;
+      const observaciones = document.getElementById(`observaciones-${id}`).value;
       const capacidad = parseFloat(document.getElementById(`capacidad-${id}`).value) || 1000;
       const estado_proceso = document.getElementById(`estado-${id}`).value;
       const nuevoVolumenDeseado = parseFloat(document.getElementById(`volActual-${id}`).value) || 0;
 
-      // Actualizar datos generales del tanque
-      const { error: errTanque } = await db.from('tanques').update({ estilo, lote, capacidad, estado_proceso }).eq('id', id);
+      const { error: errTanque } = await db.from('tanques').update({ estilo, lote, observaciones, capacidad, estado_proceso }).eq('id', id);
       if (errTanque) return alert('Error al actualizar tanque: ' + errTanque.message);
 
-      // Si cambiaste el volumen manualmente, registramos un movimiento de ajuste automático
       const diferencia = nuevoVolumenDeseado - volumenCalculadoActual;
       if (diferencia !== 0) {
         const tipoAjuste = diferencia > 0 ? 'Ajuste Manual (+)' : 'Ajuste Manual (-)';
@@ -410,7 +433,7 @@
         }]);
       }
 
-      alert('✅ Tanque y volumen actualizados correctamente.');
+      alert('✅ Tanque actualizado correctamente.');
       init();
     }
 
@@ -425,7 +448,7 @@
       const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
 
       if (movsTanque.length === 0) {
-        tablaHistorial.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
+        tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
       } else {
         movsTanque.forEach(m => {
           let desc = m.tipo;
@@ -435,18 +458,33 @@
           }
           let fecha = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
           let op = m.operario || 'Sistema';
-          tablaHistorial.innerHTML = `
+          
+          tablaHistorial.innerHTML += `
             <tr>
               <td>${fecha}</td>
               <td><strong>${op}</strong></td>
               <td>${desc}</td>
               <td>${m.cantidad} Lts</td>
+              <td><button class="btn-danger" onclick="eliminarMovimiento('${m.id}')">🗑️ Borrar</button></td>
             </tr>
           `;
         });
       }
 
       document.getElementById('historialModal').style.display = 'flex';
+    }
+
+    async function eliminarMovimiento(movId) {
+      if (!confirm('¿Estás seguro de eliminar este movimiento del historial? Esto recalculará el volumen del tanque.')) return;
+
+      const { error } = await db.from('movimientos').delete().eq('id', movId);
+      if (error) {
+        alert('Error al eliminar movimiento: ' + error.message);
+      } else {
+        alert('✅ Movimiento eliminado correctamente.');
+        cerrarHistorial();
+        init();
+      }
     }
 
     function cerrarHistorial() { document.getElementById('historialModal').style.display = 'none'; }
@@ -500,7 +538,6 @@
       printArea.innerHTML = '';
       document.getElementById('qrModal').style.display = 'flex';
 
-      // Construcción robusta de la URL base limpia para los QR
       const baseUrl = window.location.origin + window.location.pathname;
 
       tanquesGlobal.forEach(t => {
