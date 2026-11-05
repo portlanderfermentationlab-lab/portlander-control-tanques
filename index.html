@@ -201,18 +201,18 @@
     <div id="vistaDashboard" style="display:none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
-          <h1>Control de Tanques (Admin)</h1>
-          <p>Gestión completa de planta, tareas, estados, carbonatación y cierre de mermas.</p>
+          <h1>Control de Tanques (Admin - FT-1 al FT-26)</h1>
+          <p>Los 26 tanques de planta son fijos. Gestioná su contenido, estados, tareas y mermas.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR</button>
+          <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR Fijos (FT-1 al 26)</button>
           <button onclick="cerrarSesionAdmin()" class="btn-secondary">Cerrar Sesión</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>Listado General de Tanques</h2>
-        <p>Administración general con control de estados, tareas para operarios y volúmenes actualizados en tiempo real.</p>
+        <h2>Listado General de Tanques Fijos</h2>
+        <p>Control exacto de los 26 tanques de la cervecería.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -236,8 +236,8 @@
   <!-- MODAL QRS -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
-      <h2>Códigos QR de Planta</h2>
-      <p>Códigos vinculados correctamente a esta aplicación web.</p>
+      <h2>Códigos QR Fijos (FT-1 a FT-26)</h2>
+      <p>Imprimí estos 26 QR una sola vez. Sus enlaces (#FT-1 al #FT-26) son definitivos.</p>
       <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
         <button onclick="window.print()">🖨️ Imprimir Todos</button>
         <button onclick="cerrarModal()" class="btn-secondary">Cerrar Ventana</button>
@@ -289,8 +289,7 @@
     let tanqueOperarioActual = null;
     let tanqueHistorialActivoId = null;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const codigoTanqueQR = urlParams.get('tanque');
+    const hashTanque = window.location.hash.replace('#', '').trim();
 
     const opcionesEstados = [
       "Vacío sucio",
@@ -304,17 +303,42 @@
 
     async function init() {
       try {
-        const [resTanques, resMovs] = await Promise.all([
-          db.from('tanques').select('*').order('codigo', { ascending: true }),
-          db.from('movimientos').select('*').order('created_at', { ascending: false })
-        ]);
-
-        if (resTanques.error) {
-          alert('Error conectando a la base de datos: ' + resTanques.error.message);
+        let { data: resTanques, error } = await db.from('tanques').select('*');
+        if (error) {
+          alert('Error conectando a la base de datos: ' + error.message);
           return;
         }
 
-        tanquesGlobal = resTanques.data || [];
+        // Auto-inicializar los 26 tanques (FT-1 a FT-26) si la base está vacía o incompleta
+        if (!resTanques || resTanques.length === 0) {
+          const tanquesDefault = [];
+          for (let i = 1; i <= 26; i++) {
+            tanquesDefault.push({
+              codigo: `FT-${i}`,
+              capacidad: 1000,
+              estado_proceso: 'Disponible sanitizado',
+              estilo: '',
+              lote: '',
+              observaciones: '',
+              tareas: ''
+            });
+          }
+          const { data: inserted, error: errIns } = await db.from('tanques').insert(tanquesDefault).select();
+          if (errIns) {
+            alert('Error al inicializar los 26 tanques: ' + errIns.message);
+            return;
+          }
+          resTanques = inserted;
+        }
+
+        // Ordenar estrictamente del FT-1 al FT-26
+        tanquesGlobal = resTanques.sort((a, b) => {
+          const numA = parseInt(a.codigo.replace(/\D/g, '')) || 0;
+          const numB = parseInt(b.codigo.replace(/\D/g, '')) || 0;
+          return numA - numB;
+        });
+
+        const resMovs = await db.from('movimientos').select('*').order('created_at', { ascending: false });
         movimientosGlobal = resMovs.data || [];
 
         const volumenes = {};
@@ -344,12 +368,12 @@
           t.carbonatacionActual = ultimaCarbonatacion[t.id] || '-';
         });
 
-        if (codigoTanqueQR) {
+        if (hashTanque) {
           document.getElementById('vistaOperario').style.display = 'block';
-          tanqueOperarioActual = tanquesGlobal.find(t => t.codigo === codigoTanqueQR);
+          tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
           
           if (tanqueOperarioActual) {
-            document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
+            document.getElementById('opTanqueCodigo',).innerText = `Tanque ${tanqueOperarioActual.codigo}`;
             document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
             document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
             document.getElementById('opObservaciones').innerText = tanqueOperarioActual.observaciones || 'Sin detalles';
@@ -373,7 +397,7 @@
               }
             });
           } else {
-            alert('Tanque no encontrado');
+            alert('❌ Tanque no encontrado para el código: ' + hashTanque);
           }
         } else {
           const adminLogueado = sessionStorage.getItem('admin_auth');
@@ -427,7 +451,6 @@
           <tr>
             <td>
               <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial y mermas">${t.codigo}</strong>
-              <br><button onclick="cambiarNombreTanque('${t.id}', '${t.codigo}')" style="background:none; border:none; color:var(--accent); font-size:11px; padding:0; cursor:pointer; margin-top:2px;">✏️ Renombrar</button>
             </td>
             <td>
               <div style="margin-bottom: 4px;"><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Estilo(s)" style="width: 120px;"></div>
@@ -460,15 +483,6 @@
       });
     }
 
-    async function cambiarNombreTanque(id, codigoActual) {
-      const nuevoCodigo = prompt('Nuevo nombre/código del tanque:', codigoActual);
-      if (!nuevoCodigo || !nuevoCodigo.trim()) return;
-
-      const { error } = await db.from('tanques').update({ codigo: nuevoCodigo.trim() }).eq('id', id);
-      if (error) alert('Error: ' + error.message);
-      else { alert('✅ Actualizado.'); init(); }
-    }
-
     async function guardarFilaTanque(id, estadoAnterior, volumenCalculadoActual) {
       const estilo = document.getElementById(`estilo-${id}`).value;
       const lote = document.getElementById(`lote-${id}`).value;
@@ -480,7 +494,6 @@
 
       let datosUpdate = { estilo, lote, observaciones, tareas, capacidad, estado_proceso };
 
-      // Si cambió el estado del tanque, actualizamos la fecha/hora de "estado_desde"
       if (estado_proceso !== estadoAnterior) {
         datosUpdate.estado_desde = new Date().toISOString();
       }
@@ -565,7 +578,7 @@
 
       const { error } = await db.from('movimientos').delete().eq('id', movId);
       if (error) {
-        alert('Error: ' + error.message);
+        alert('Error al eliminar movimiento: ' + error.message);
       } else {
         alert('✅ Movimiento eliminado.');
         cerrarHistorial();
@@ -657,7 +670,7 @@
         `;
         printArea.appendChild(qrDiv);
 
-        const targetUrl = `${baseUrl}?tanque=${t.codigo}`;
+        const targetUrl = `${baseUrl}#${t.codigo}`;
         QRCode.toCanvas(document.getElementById(`canvas-${t.id}`), targetUrl, { width: 120 });
       });
     }
@@ -665,7 +678,7 @@
     function descargarQRIndividual(codigoTanque) {
       const canvasTemp = document.createElement('canvas');
       const baseUrl = window.location.origin + window.location.pathname;
-      const targetUrl = `${baseUrl}?tanque=${codigoTanque}`;
+      const targetUrl = `${baseUrl}#${codigoTanque}`;
 
       QRCode.toCanvas(canvasTemp, targetUrl, { width: 300 }, function (error) {
         if (error) return alert('Error generando QR');
