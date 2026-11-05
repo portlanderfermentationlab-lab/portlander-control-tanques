@@ -17,6 +17,7 @@
       --accent-hover: #1d4ed8;
       --success: #16a34a; 
       --danger: #dc2626;
+      --warning: #d97706;
       --border: #e2e8f0; 
     }
     
@@ -29,7 +30,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1250px; margin: 0 auto; }
 
     .card { 
       background: var(--card-bg); 
@@ -45,7 +46,7 @@
     h2 { font-size: 18px; margin-bottom: 8px; }
     p { color: var(--text-muted); font-size: 14px; }
 
-    input, select { 
+    input, select, textarea { 
       padding: 8px 12px; 
       border: 1px solid var(--border); 
       border-radius: 8px; 
@@ -56,7 +57,7 @@
       font-family: inherit;
     }
 
-    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
     button { 
       padding: 8px 14px; 
@@ -79,6 +80,9 @@
 
     .btn-qr { background-color: #4f46e5; }
     .btn-qr:hover { background-color: #4338ca; }
+
+    .btn-warning { background-color: var(--warning); }
+    .btn-warning:hover { background-color: #b45309; }
 
     .btn-danger { background-color: var(--danger); padding: 4px 8px; font-size: 11px; }
     .btn-danger:hover { background-color: #b91c1c; }
@@ -116,7 +120,10 @@
     <div id="vistaOperario" class="card" style="max-width: 500px; margin: 40px auto; display:none;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px;">
         <h2 id="opTanqueCodigo" style="margin: 0; font-size: 22px;">Tanque ---</h2>
-        <span class="badge" id="opEstado">-</span>
+        <div>
+          <span class="badge" id="opEstado">-</span>
+          <div id="opTiempoEstado" style="font-size: 10px; color: var(--text-muted); margin-top: 2px; text-align: right;">Desde: -</div>
+        </div>
       </div>
       
       <div style="background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
@@ -134,13 +141,23 @@
           <span style="font-size: 12px; color: var(--text-muted); display: block;">Observaciones / Litros por Lote</span>
           <span id="opObservaciones" style="font-size: 13px; color: var(--text-main);">-</span>
         </div>
-        <div style="border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px;">
-          <span style="font-size: 12px; color: var(--text-muted); display: block;">Volumen Actual / Capacidad Máxima</span>
-          <span id="opVolumen" style="font-size: 20px; font-weight: 700; color: var(--accent);">0</span> <span style="font-size: 14px; color: var(--text-muted);">Lts</span>
+        <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 10px; border-radius: 8px; margin-top: 10px;">
+          <span style="font-size: 11px; font-weight: 700; color: #b45309; display: block; text-transform: uppercase;">Tareas Pendientes:</span>
+          <span id="opTareas" style="font-size: 13px; color: #92400e;">Sin tareas asignadas.</span>
+        </div>
+        <div style="border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-size: 12px; color: var(--text-muted); display: block;">Volumen Actual / Capacidad</span>
+            <span id="opVolumen" style="font-size: 20px; font-weight: 700; color: var(--accent);">0</span> <span style="font-size: 14px; color: var(--text-muted);">Lts</span>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 12px; color: var(--text-muted); display: block;">Carbonatación Reg.</span>
+            <strong id="opCarbonatacionActual" style="font-size: 14px; color: var(--success);">-</strong>
+          </div>
         </div>
       </div>
       
-      <h3 style="font-size: 15px; margin-bottom: 8px;">Registrar Movimiento</h3>
+      <h3 style="font-size: 15px; margin-bottom: 8px;">Registrar Movimiento / Medición</h3>
       
       <div style="margin-bottom: 12px;">
         <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Tu Nombre (Operario): *</label>
@@ -157,6 +174,7 @@
           <option value="Envasado Barril">Envasado en Barril (en Lts)</option>
           <option value="Envasado Lata">Envasado en Lata (en Lts)</option>
           <option value="Envasado Botella">Envasado en Botella (en Lts)</option>
+          <option value="Medicion Carbonatacion">Medición / Ajuste de Carbonatación (Vols)</option>
           <option value="Descarga General">Descarga / Limpieza Total (en Lts)</option>
         </select>
       </div>
@@ -166,9 +184,14 @@
         <select id="opTanqueDestino" style="width: 100%;"><option value="">Seleccionar tanque receptor...</option></select>
       </div>
 
-      <div style="margin-bottom: 20px;">
-        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Cantidad:</label>
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;" id="lblCantidad">Cantidad:</label>
         <input type="number" id="opCantidad" placeholder="Cantidad (Litros, Baldes o Kg)" style="width: 100%;">
+      </div>
+
+      <div id="divCarbonatacion" style="display:none; margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Nivel de Carbonatación (Volúmenes de CO2):</label>
+        <input type="number" step="0.1" id="opCarbonatacionVal" placeholder="Ej: 2.5" style="width: 100%;">
       </div>
 
       <button onclick="guardarMovimientoOperario()" style="width: 100%; padding: 14px; font-size: 15px;">Guardar Registro</button>
@@ -179,7 +202,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1>Control de Tanques (Admin)</h1>
-          <p>Gestión completa de planta, estilos múltiples, estados extendidos y ajustes.</p>
+          <p>Gestión completa de planta, tareas, estados, carbonatación y cierre de mermas.</p>
         </div>
         <div style="display: flex; gap: 10px;">
           <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR</button>
@@ -189,16 +212,17 @@
 
       <div class="card">
         <h2>Listado General de Tanques</h2>
-        <p>Modificá estilos, lotes, observaciones de volúmenes, estados y volúmenes actuales con sesión persistente (sin pedir PIN repetidamente).</p>
+        <p>Administración general con control de estados, tareas para operarios y volúmenes actualizados en tiempo real.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
               <tr>
                 <th>Tanque</th>
                 <th>Estilo(s) y Lote(s)</th>
-                <th>Observaciones (Detalle Lotes)</th>
+                <th>Observaciones / Detalle</th>
+                <th>Tareas Operarias</th>
                 <th>Volumen / Cap.</th>
-                <th>Estado</th>
+                <th>Estado & Desde</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -222,25 +246,35 @@
     </div>
   </div>
 
-  <!-- MODAL HISTORIAL -->
+  <!-- MODAL HISTORIAL & MERMAS -->
   <div id="historialModal" class="modal">
     <div class="modal-content" style="max-width: 750px;">
-      <h2 id="historialTitulo" style="margin-bottom: 20px;">Historial del Tanque</h2>
-      <div style="overflow-x: auto; max-height: 350px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
+      <h2 id="historialTitulo" style="margin-bottom: 10px;">Historial del Tanque</h2>
+      <div id="seccionCierreLote" style="background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 10px; margin-bottom: 16px; text-align: left; display:none;">
+        <h3 style="font-size: 14px; margin-bottom: 6px;">🧪 Cierre de Lote y Cálculo de Merma</h3>
+        <p style="font-size: 12px; margin-bottom: 10px;">Compará el volumen inicial ingresado frente al volumen final real para calcular pérdidas.</p>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="number" id="inputVolInicialMerma" placeholder="Vol. Inicial (Lts)" style="width: 140px;">
+          <button class="btn-warning" onclick="calcularMermaTanque()" style="font-size: 12px;">Calcular Merma</button>
+        </div>
+        <div id="resultadoMerma" style="font-size: 13px; font-weight: 600; color: var(--success); margin-top: 8px;"></div>
+      </div>
+
+      <div style="overflow-x: auto; max-height: 300px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
         <table style="margin-top: 0;">
           <thead>
             <tr>
               <th>Fecha / Hora</th>
               <th>Operario</th>
               <th>Movimiento</th>
-              <th>Cantidad</th>
+              <th>Cantidad / CO2</th>
               <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tablaHistorialTanque"></tbody>
         </table>
       </div>
-      <button onclick="cerrarHistorial()" class="btn-secondary">Cerrar Historial</button>
+      <button onclick="cerrarHistorial()" class="btn-secondary">Cerrar Ventana</button>
     </div>
   </div>
 
@@ -253,6 +287,7 @@
     let tanquesGlobal = [];
     let movimientosGlobal = [];
     let tanqueOperarioActual = null;
+    let tanqueHistorialActivoId = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const codigoTanqueQR = urlParams.get('tanque');
@@ -283,6 +318,8 @@
         movimientosGlobal = resMovs.data || [];
 
         const volumenes = {};
+        const ultimaCarbonatacion = {};
+
         movimientosGlobal.forEach(m => {
           if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
           const cant = parseFloat(m.cantidad) || 0;
@@ -293,13 +330,18 @@
             volumenes[m.tanque_id] -= cant;
             if (!volumenes[m.tanque_destino_id]) volumenes[m.tanque_destino_id] = 0;
             volumenes[m.tanque_destino_id] += cant;
-          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura' && m.tipo !== 'Ajuste Manual (-)') {
+          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura' && m.tipo !== 'Ajuste Manual (-)' && m.tipo !== 'Medicion Carbonatacion') {
             volumenes[m.tanque_id] -= cant;
+          }
+
+          if (m.carbonatacion && !ultimaCarbonatacion[m.tanque_id]) {
+            ultimaCarbonatacion[m.tanque_id] = m.carbonatacion;
           }
         });
 
         tanquesGlobal.forEach(t => {
           t.actual = Math.max(0, volumenes[t.id] || 0);
+          t.carbonatacionActual = ultimaCarbonatacion[t.id] || '-';
         });
 
         if (codigoTanqueQR) {
@@ -311,8 +353,17 @@
             document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
             document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
             document.getElementById('opObservaciones').innerText = tanqueOperarioActual.observaciones || 'Sin detalles';
+            document.getElementById('opTareas').innerText = tanqueOperarioActual.tareas || 'Ninguna tarea pendiente.';
             document.getElementById('opEstado').innerText = tanqueOperarioActual.estado_proceso || 'Disponible sanitizado';
             document.getElementById('opVolumen').innerText = tanqueOperarioActual.actual;
+            document.getElementById('opCarbonatacionActual').innerText = tanqueOperarioActual.carbonatacionActual !== '-' ? `${tanqueOperarioActual.carbonatacionActual} Vols` : '-';
+
+            if (tanqueOperarioActual.estado_desde) {
+              const fechaEstado = new Date(tanqueOperarioActual.estado_desde).toLocaleString();
+              document.getElementById('opTiempoEstado').innerText = `Desde: ${fechaEstado}`;
+            } else {
+              document.getElementById('opTiempoEstado').innerText = `Desde: S/D`;
+            }
 
             const selDestino = document.getElementById('opTanqueDestino');
             selDestino.innerHTML = '<option value="">Seleccionar tanque receptor...</option>';
@@ -370,31 +421,38 @@
           opcionesHTML += `<option value="${est}" ${sel}>${est}</option>`;
         });
 
+        let fechaDesdeTxt = t.estado_desde ? new Date(t.estado_desde).toLocaleDateString() + ' ' + new Date(t.estado_desde).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'S/D';
+
         tbody.innerHTML += `
           <tr>
             <td>
-              <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial">${t.codigo}</strong>
+              <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial y mermas">${t.codigo}</strong>
               <br><button onclick="cambiarNombreTanque('${t.id}', '${t.codigo}')" style="background:none; border:none; color:var(--accent); font-size:11px; padding:0; cursor:pointer; margin-top:2px;">✏️ Renombrar</button>
             </td>
             <td>
-              <div style="margin-bottom: 4px;"><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Estilo(s)" style="width: 130px;"></div>
-              <div><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Lote(s)" style="width: 130px;"></div>
+              <div style="margin-bottom: 4px;"><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Estilo(s)" style="width: 120px;"></div>
+              <div><input type="text" id="lote-${t.id}" value="${t.lote || ''}" placeholder="Lote(s)" style="width: 120px;"></div>
             </td>
             <td>
-              <input type="text" id="observaciones-${t.id}" value="${t.observaciones || ''}" placeholder="Ej: Lote 1: 500L, Lote 2: 300L" style="width: 180px;">
+              <input type="text" id="observaciones-${t.id}" value="${t.observaciones || ''}" placeholder="Ej: L1: 500L, L2: 300L" style="width: 160px;">
             </td>
             <td>
-              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 60px;" title="Volumen actual"> / 
-              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 60px;" title="Capacidad máxima"> L
+              <textarea id="tareas-${t.id}" placeholder="Tareas para operario..." style="width: 150px; height: 45px; resize: vertical;">${t.tareas || ''}</textarea>
             </td>
             <td>
-              <select id="estado-${t.id}" style="width: 135px;">
+              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 55px;" title="Actual"> / 
+              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 55px;" title="Capacidad"> L
+            </td>
+            <td>
+              <select id="estado-${t.id}" style="width: 130px; margin-bottom: 4px;">
                 ${opcionesHTML}
               </select>
+              <br><span style="font-size: 11px; color: var(--text-muted);">Desde: ${fechaDesdeTxt}</span>
+              <br><span style="font-size: 11px; color: var(--success); font-weight: 600;">CO2: ${t.carbonatacionActual} Vols</span>
             </td>
             <td>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn-save" onclick="guardarFilaTanque('${t.id}', ${t.actual})">💾 Guardar</button>
+              <div style="display: flex; gap: 4px; flex-direction: column;">
+                <button class="btn-save" onclick="guardarFilaTanque('${t.id}', '${t.estado_proceso || ''}', ${t.actual})">💾 Guardar</button>
                 <button class="btn-qr" onclick="descargarQRIndividual('${t.codigo}')">📥 QR</button>
               </div>
             </td>
@@ -411,15 +469,23 @@
       else { alert('✅ Actualizado.'); init(); }
     }
 
-    async function guardarFilaTanque(id, volumenCalculadoActual) {
+    async function guardarFilaTanque(id, estadoAnterior, volumenCalculadoActual) {
       const estilo = document.getElementById(`estilo-${id}`).value;
       const lote = document.getElementById(`lote-${id}`).value;
       const observaciones = document.getElementById(`observaciones-${id}`).value;
+      const tareas = document.getElementById(`tareas-${id}`).value;
       const capacidad = parseFloat(document.getElementById(`capacidad-${id}`).value) || 1000;
       const estado_proceso = document.getElementById(`estado-${id}`).value;
       const nuevoVolumenDeseado = parseFloat(document.getElementById(`volActual-${id}`).value) || 0;
 
-      const { error: errTanque } = await db.from('tanques').update({ estilo, lote, observaciones, capacidad, estado_proceso }).eq('id', id);
+      let datosUpdate = { estilo, lote, observaciones, tareas, capacidad, estado_proceso };
+
+      // Si cambió el estado del tanque, actualizamos la fecha/hora de "estado_desde"
+      if (estado_proceso !== estadoAnterior) {
+        datosUpdate.estado_desde = new Date().toISOString();
+      }
+
+      const { error: errTanque } = await db.from('tanques').update(datosUpdate).eq('id', id);
       if (errTanque) return alert('Error al actualizar tanque: ' + errTanque.message);
 
       const diferencia = nuevoVolumenDeseado - volumenCalculadoActual;
@@ -438,10 +504,15 @@
     }
 
     function verHistorialTanque(tanqueId) {
+      tanqueHistorialActivoId = tanqueId;
       const tanque = tanquesGlobal.find(t => t.id === tanqueId);
       if (!tanque) return;
 
       document.getElementById('historialTitulo').innerText = `Historial - Tanque ${tanque.codigo}`;
+      document.getElementById('seccionCierreLote').style.display = 'block';
+      document.getElementById('inputVolInicialMerma').value = '';
+      document.getElementById('resultadoMerma').innerText = '';
+
       const tablaHistorial = document.getElementById('tablaHistorialTanque');
       tablaHistorial.innerHTML = '';
 
@@ -458,13 +529,14 @@
           }
           let fecha = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
           let op = m.operario || 'Sistema';
+          let detalleExtra = m.tipo === 'Medicion Carbonatacion' ? `${m.carbonatacion} Vols CO2` : `${m.cantidad} Lts`;
           
           tablaHistorial.innerHTML += `
             <tr>
               <td>${fecha}</td>
               <td><strong>${op}</strong></td>
               <td>${desc}</td>
-              <td>${m.cantidad} Lts</td>
+              <td>${detalleExtra}</td>
               <td><button class="btn-danger" onclick="eliminarMovimiento('${m.id}')">🗑️ Borrar</button></td>
             </tr>
           `;
@@ -474,14 +546,28 @@
       document.getElementById('historialModal').style.display = 'flex';
     }
 
+    function calcularMermaTanque() {
+      const volInicial = parseFloat(document.getElementById('inputVolInicialMerma').value);
+      if (isNaN(volInicial) || volInicial <= 0) return alert('Ingresá un volumen inicial válido.');
+
+      const tanque = tanquesGlobal.find(t => t.id === tanqueHistorialActivoId);
+      if (!tanque) return;
+
+      const volActual = tanque.actual;
+      const diferencia = volInicial - volActual;
+      const porcentaje = ((diferencia / volInicial) * 100).toFixed(1);
+
+      document.getElementById('resultadoMerma').innerText = `📊 Merma calculada: ${diferencia} Lts perdidos (${porcentaje}% de pérdida sobre ${volInicial}L iniciales).`;
+    }
+
     async function eliminarMovimiento(movId) {
-      if (!confirm('¿Estás seguro de eliminar este movimiento del historial? Esto recalculará el volumen del tanque.')) return;
+      if (!confirm('¿Estás seguro de eliminar este movimiento? Esto recalculará el volumen.')) return;
 
       const { error } = await db.from('movimientos').delete().eq('id', movId);
       if (error) {
-        alert('Error al eliminar movimiento: ' + error.message);
+        alert('Error: ' + error.message);
       } else {
-        alert('✅ Movimiento eliminado correctamente.');
+        alert('✅ Movimiento eliminado.');
         cerrarHistorial();
         init();
       }
@@ -492,15 +578,35 @@
     function cambiarTipoMovimientoOperario() {
       const tipo = document.getElementById('opTipoMovimiento').value;
       const divDestino = document.getElementById('divTanqueDestino');
+      const divCarbo = document.getElementById('divCarbonatacion');
+      const inputCant = document.getElementById('opCantidad');
+      const lblCant = document.getElementById('lblCantidad');
+
       divDestino.style.display = (tipo === 'Trasvase') ? 'block' : 'none';
+      divCarbo.style.display = (tipo === 'Medicion Carbonatacion') ? 'block' : 'none';
+
+      if (tipo === 'Medicion Carbonatacion') {
+        lblCant.innerText = 'Nota / Comentario opcional:';
+        inputCant.placeholder = 'Comentario breve';
+      } else {
+        lblCant.innerText = 'Cantidad:';
+        inputCant.placeholder = 'Cantidad (Litros, Baldes o Kg)';
+      }
     }
 
     async function guardarMovimientoOperario() {
       const operario = document.getElementById('opNombreOperario').value.trim();
       if (!operario) return alert('⚠️ Ingresá tu nombre.');
       const tipo = document.getElementById('opTipoMovimiento').value;
-      const cantidad = document.getElementById('opCantidad').value;
-      if (!cantidad) return alert('⚠️ Ingresá la cantidad.');
+      let cantidad = document.getElementById('opCantidad').value || 0;
+      let carbonatacion = null;
+
+      if (tipo !== 'Medicion Carbonatacion' && !cantidad) return alert('⚠️ Ingresá la cantidad.');
+
+      if (tipo === 'Medicion Carbonatacion') {
+        carbonatacion = parseFloat(document.getElementById('opCarbonatacionVal').value);
+        if (isNaN(carbonatacion)) return alert('⚠️ Ingresá el nivel de carbonatación (Vols de CO2).');
+      }
 
       let tanque_destino_id = null;
       if (tipo === 'Trasvase') {
@@ -526,11 +632,12 @@
         tipo, 
         cantidad, 
         tanque_destino_id, 
-        operario 
+        operario,
+        carbonatacion 
       }]);
 
       if (error) alert('Error: ' + error.message);
-      else { alert('✅ ¡Registrado con éxito!'); location.reload(); }
+      else { alert('✅ ¡Registro guardado con éxito!'); location.reload(); }
     }
 
     function abrirModalQRs() {
