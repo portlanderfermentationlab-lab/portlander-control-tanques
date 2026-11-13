@@ -84,10 +84,12 @@
     .btn-warning { background-color: var(--warning); }
     .btn-warning:hover { background-color: #b45309; }
 
-    .btn-danger { background-color: var(--danger); padding: 4px 8px; font-size: 11px; }
+    .btn-danger { background-color: var(--danger); }
     .btn-danger:hover { background-color: #b91c1c; }
 
-    .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: none; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+    .clickable-tanque { color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: none; font-size: 15px; }
     .clickable-tanque:hover { text-decoration: underline; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
@@ -96,12 +98,13 @@
     tr:hover td { background-color: #fafafa; }
     
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-content { background: white; padding: 28px; border-radius: 20px; max-width: 800px; width: 92%; max-height: 88vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     
     .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
     .qr-card { border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: #fff; text-align: center; }
     .qr-card canvas { display: block; margin: 0 auto 10px auto; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #f1f5f9; color: var(--text-muted); }
+    .badge-cerrado { background: #e2e8f0; color: #475569; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -202,7 +205,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1>Control de Tanques (Admin - FT-1 al FT-26)</h1>
-          <p>Los 26 tanques de planta son fijos. Gestioná su contenido, estados, tareas y mermas.</p>
+          <p>Hacé clic en el nombre del tanque (ej: <strong>FT-20</strong>) para ver historial, exportar a Excel o vaciar/cerrar lote.</p>
         </div>
         <div style="display: flex; gap: 10px;">
           <button onclick="abrirModalQRs()" class="btn-qr">🖨️ Códigos QR Fijos (FT-1 al 26)</button>
@@ -212,7 +215,6 @@
 
       <div class="card">
         <h2>Listado General de Tanques Fijos</h2>
-        <p>Modificá volúmenes libremente: al guardar, el sistema ajustará automáticamente el historial.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -246,25 +248,40 @@
     </div>
   </div>
 
-  <!-- MODAL HISTORIAL & MERMAS -->
+  <!-- MODAL HISTORIAL, MERMAS, EXCEL Y VACIADO -->
   <div id="historialModal" class="modal">
-    <div class="modal-content" style="max-width: 750px;">
-      <h2 id="historialTitulo" style="margin-bottom: 10px;">Historial del Tanque</h2>
-      <div id="seccionCierreLote" style="background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 10px; margin-bottom: 16px; text-align: left; display:none;">
-        <h3 style="font-size: 14px; margin-bottom: 6px;">🧪 Cierre de Lote y Cálculo de Merma</h3>
-        <p style="font-size: 12px; margin-bottom: 10px;">Compará el volumen inicial ingresado frente al volumen final real para calcular pérdidas.</p>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="number" id="inputVolInicialMerma" placeholder="Vol. Inicial (Lts)" style="width: 140px;">
-          <button class="btn-warning" onclick="calcularMermaTanque()" style="font-size: 12px;">Calcular Merma</button>
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 id="historialTitulo" style="margin: 0;">Historial del Tanque</h2>
+        <button class="btn-save" onclick="exportarHistorialExcel()" style="font-size: 12px;">📊 Exportar Excel (CSV)</button>
+      </div>
+
+      <!-- PANEL DE MERMA Y CIERRE DE LOTE -->
+      <div style="background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; text-align: left;">
+        <h3 style="font-size: 14px; margin-bottom: 6px;">🧪 Balance de Lote, Cálculo de Merma y Vaciado</h3>
+        <div id="resumenBalanceLote" style="font-size: 13px; color: var(--text-main); margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+          Cargando balance...
+        </div>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="number" id="inputVolInicialMerma" placeholder="Vol. Inicial manual (opcional)" style="width: 185px;">
+            <button class="btn-warning" onclick="calcularMermaManual()" style="font-size: 12px;">Recalcular Merma</button>
+          </div>
+          
+          <button class="btn-danger" onclick="cerrarLoteYVaciarTanque()" style="font-size: 12px; padding: 9px 14px;">
+            🧹 Cerrar Lote y Vaciar Tanque a 0 Lts
+          </button>
         </div>
         <div id="resultadoMerma" style="font-size: 13px; font-weight: 600; color: var(--success); margin-top: 8px;"></div>
       </div>
 
-      <div style="overflow-x: auto; max-height: 300px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
+      <div style="overflow-x: auto; max-height: 320px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
         <table style="margin-top: 0;">
           <thead>
             <tr>
               <th>Fecha / Hora</th>
+              <th>Estado Lote</th>
               <th>Operario</th>
               <th>Movimiento</th>
               <th>Cantidad / CO2</th>
@@ -342,7 +359,10 @@
         const volumenes = {};
         const ultimaCarbonatacion = {};
 
+        // SOLO sumar movimientos del lote activo (lote_cerrado !== true)
         movimientosGlobal.forEach(m => {
+          if (m.lote_cerrado === true) return;
+
           if (!volumenes[m.tanque_id]) volumenes[m.tanque_id] = 0;
           const cant = parseFloat(m.cantidad) || 0;
           
@@ -352,7 +372,13 @@
             volumenes[m.tanque_id] -= cant;
             if (!volumenes[m.tanque_destino_id]) volumenes[m.tanque_destino_id] = 0;
             volumenes[m.tanque_destino_id] += cant;
-          } else if (m.tipo !== 'Purga' && m.tipo !== 'Recupero Levadura' && m.tipo !== 'Ajuste Manual (-)' && m.tipo !== 'Medicion Carbonatacion') {
+          } else if (
+            m.tipo === 'Envasado Barril' || 
+            m.tipo === 'Envasado Lata' || 
+            m.tipo === 'Envasado Botella' || 
+            m.tipo === 'Descarga General' || 
+            m.tipo === 'Ajuste Manual (-)'
+          ) {
             volumenes[m.tanque_id] -= cant;
           }
 
@@ -395,7 +421,7 @@
               }
             });
           } else {
-            alert('❌ Tanque não encontrado para o código: ' + hashTanque);
+            alert('❌ Tanque no encontrado para el código: ' + hashTanque);
           }
         } else {
           const adminLogueado = sessionStorage.getItem('admin_auth');
@@ -448,7 +474,7 @@
         tbody.innerHTML += `
           <tr>
             <td>
-              <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Ver historial y mermas">${t.codigo}</strong>
+              <strong class="clickable-tanque" onclick="verHistorialTanque('${t.id}')" title="Clic para historial, merma, Excel o vaciar tanque">${t.codigo}</strong>
             </td>
             <td>
               <div style="margin-bottom: 4px;"><input type="text" id="estilo-${t.id}" value="${t.estilo || ''}" placeholder="Estilo(s)" style="width: 120px;"></div>
@@ -461,11 +487,11 @@
               <textarea id="tareas-${t.id}" placeholder="Tareas para operario..." style="width: 150px; height: 45px; resize: vertical;">${t.tareas || ''}</textarea>
             </td>
             <td>
-              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 55px;" title="Actual"> / 
-              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 55px;" title="Capacidad"> L
+              <input type="number" id="volActual-${t.id}" value="${t.actual}" style="width: 65px;" title="Litros Actuales"> / 
+              <input type="number" id="capacidad-${t.id}" value="${cap}" style="width: 65px;" title="Capacidad Total"> L
             </td>
             <td>
-              <select id="estado-${t.id}" style="width: 130px; margin-bottom: 4px;">
+              <select id="estado-${t.id}" style="width: 135px; margin-bottom: 4px;">
                 ${opcionesHTML}
               </select>
               <br><span style="font-size: 11px; color: var(--text-muted);">Desde: ${fechaDesdeTxt}</span>
@@ -507,7 +533,8 @@
           tipo: tipoAjuste,
           cantidad: Math.abs(diferencia),
           tanque_destino_id: null,
-          operario: 'Administrador'
+          operario: 'Administrador',
+          lote_cerrado: false
         }]);
         if (errMov) {
           alert('Error al registrar el ajuste de volumen: ' + errMov.message);
@@ -524,8 +551,7 @@
       const tanque = tanquesGlobal.find(t => t.id === tanqueId);
       if (!tanque) return;
 
-      document.getElementById('historialTitulo').innerText = `Historial - Tanque ${tanque.codigo}`;
-      document.getElementById('seccionCierreLote').style.display = 'block';
+      document.getElementById('historialTitulo').innerText = `Historial y Balance - ${tanque.codigo} (${tanque.estilo || 'Sin estilo'})`;
       document.getElementById('inputVolInicialMerma').value = '';
       document.getElementById('resultadoMerma').innerText = '';
 
@@ -534,8 +560,38 @@
 
       const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanqueId || m.tanque_destino_id === tanqueId);
 
+      // Calcular balance del lote activo (solo movimientos NO cerrados)
+      let totalEntradas = 0;
+      let totalSalidasEnvasado = 0;
+      let totalPurgasBaldes = 0;
+      let totalLevaduraKg = 0;
+
+      movsTanque.forEach(m => {
+        if (m.lote_cerrado === true) return;
+        const c = parseFloat(m.cantidad) || 0;
+        if (m.tipo === 'Carga' || m.tipo === 'Ajuste Manual (+)' || (m.tipo === 'Trasvase' && m.tanque_destino_id === tanqueId)) {
+          totalEntradas += c;
+        } else if (m.tipo === 'Envasado Barril' || m.tipo === 'Envasado Lata' || m.tipo === 'Envasado Botella' || (m.tipo === 'Trasvase' && m.tanque_id === tanqueId)) {
+          totalSalidasEnvasado += c;
+        } else if (m.tipo === 'Purga') {
+          totalPurgasBaldes += c;
+        } else if (m.tipo === 'Recupero Levadura') {
+          totalLevaduraKg += c;
+        }
+      });
+
+      const mermaActual = Math.max(0, totalEntradas - totalSalidasEnvasado - tanque.actual);
+      const porcMerma = totalEntradas > 0 ? ((mermaActual / totalEntradas) * 100).toFixed(1) : 0;
+
+      document.getElementById('resumenBalanceLote').innerHTML = `
+        <strong>Lote Activo (${tanque.lote || 'S/N'}):</strong><br>
+        • Entradas acumuladas: <strong>${totalEntradas} Lts</strong> | Envasado/Trasvasado: <strong>${totalSalidasEnvasado} Lts</strong> | En Tanque ahora: <strong>${tanque.actual} Lts</strong><br>
+        • Purgas: <strong>${totalPurgasBaldes} baldes</strong> | Levadura recuperada: <strong>${totalLevaduraKg} kg</strong><br>
+        • Merma implícita (si vaciaras ahora): <strong style="color: var(--warning);">${mermaActual} Lts (${porcMerma}%)</strong>
+      `;
+
       if (movsTanque.length === 0) {
-        tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
+        tablaHistorial.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
       } else {
         movsTanque.forEach(m => {
           let desc = m.tipo;
@@ -545,15 +601,20 @@
           }
           let fecha = m.created_at ? new Date(m.created_at).toLocaleString() : 'Fecha s/d';
           let op = m.operario || 'Sistema';
-          let detalleExtra = m.tipo === 'Medicion Carbonatacion' ? `${m.carbonatacion} Vols CO2` : `${m.cantidad} Lts`;
+          let unidad = 'Lts';
+          if (m.tipo === 'Purga') unidad = 'Baldes';
+          if (m.tipo === 'Recupero Levadura') unidad = 'Kg';
+          let detalleExtra = m.tipo === 'Medicion Carbonatacion' ? `${m.carbonatacion} Vols CO2` : `${m.cantidad} ${unidad}`;
+          let estadoTag = m.lote_cerrado ? `<span class="badge-cerrado">Lote Cerrado</span>` : `<span class="badge" style="background:#dcfce7; color:#166534;">Activo</span>`;
           
           tablaHistorial.innerHTML += `
-            <tr>
+            <tr style="${m.lote_cerrado ? 'opacity: 0.6;' : ''}">
               <td>${fecha}</td>
+              <td>${estadoTag}</td>
               <td><strong>${op}</strong></td>
               <td>${desc}</td>
               <td>${detalleExtra}</td>
-              <td><button class="btn-danger" onclick="eliminarMovimiento('${m.id}')">🗑️ Borrar</button></td>
+              <td><button class="btn-danger btn-sm" onclick="eliminarMovimiento('${m.id}')">🗑️</button></td>
             </tr>
           `;
         });
@@ -562,18 +623,111 @@
       document.getElementById('historialModal').style.display = 'flex';
     }
 
-    function calcularMermaTanque() {
+    function calcularMermaManual() {
       const volInicial = parseFloat(document.getElementById('inputVolInicialMerma').value);
       if (isNaN(volInicial) || volInicial <= 0) return alert('Ingresá un volumen inicial válido.');
 
       const tanque = tanquesGlobal.find(t => t.id === tanqueHistorialActivoId);
       if (!tanque) return;
 
-      const volActual = tanque.actual;
-      const diferencia = volInicial - volActual;
-      const porcentaje = ((diferencia / volInicial) * 100).toFixed(1);
+      const movsTanque = movimientosGlobal.filter(m => !m.lote_cerrado && (m.tanque_id === tanque.id || m.tanque_destino_id === tanque.id));
+      let totalSalidas = 0;
+      movsTanque.forEach(m => {
+        const c = parseFloat(m.cantidad) || 0;
+        if (m.tipo === 'Envasado Barril' || m.tipo === 'Envasado Lata' || m.tipo === 'Envasado Botella' || (m.tipo === 'Trasvase' && m.tanque_id === tanque.id)) {
+          totalSalidas += c;
+        }
+      });
 
-      document.getElementById('resultadoMerma').innerText = `📊 Merma calculada: ${diferencia} Lts perdidos (${porcentaje}% de pérdida sobre ${volInicial}L iniciales).`;
+      const merma = volInicial - totalSalidas - tanque.actual;
+      const porcentaje = ((merma / volInicial) * 100).toFixed(1);
+
+      document.getElementById('resultadoMerma').innerText = `📊 Merma calculada sobre ${volInicial}L iniciales: ${merma} Lts perdidos (${porcentaje}% de merma, descontando ${totalSalidas}L envasados y ${tanque.actual}L remanentes).`;
+    }
+
+    async function cerrarLoteYVaciarTanque() {
+      const tanque = tanquesGlobal.find(t => t.id === tanqueHistorialActivoId);
+      if (!tanque) return;
+
+      const confirmar = confirm(
+        `¿Confirmás el CIERRE DE LOTE y VACIADO del tanque ${tanque.codigo}?\n\n` +
+        `• Se exportará primero el historial a Excel para tu respaldo.\n` +
+        `• Los movimientos actuales quedarán archivados como "Lote Cerrado".\n` +
+        `• El tanque volverá a 0 Lts, estado "Vacío sucio", y sin estilo/lote asignado para arrancar limpio.`
+      );
+      if (!confirmar) return;
+
+      // 1. Exportar Excel automáticamente antes de vaciar
+      exportarHistorialExcel();
+
+      // 2. Marcar todos los movimientos activos de este tanque como lote_cerrado = true
+      const { error: errMovs } = await db
+        .from('movimientos')
+        .update({ lote_cerrado: true })
+        .eq('tanque_id', tanque.id)
+        .eq('lote_cerrado', false);
+
+      if (errMovs) return alert('Error al archivar movimientos: ' + errMovs.message);
+
+      // 3. Resetear datos del tanque a vacío
+      const { error: errTanque } = await db
+        .from('tanques')
+        .update({
+          estilo: '',
+          lote: '',
+          observaciones: '',
+          tareas: '',
+          estado_proceso: 'Vacío sucio',
+          estado_desde: new Date().toISOString()
+        })
+        .eq('id', tanque.id);
+
+      if (errTanque) return alert('Error al vaciar el tanque: ' + errTanque.message);
+
+      alert(`✅ ¡Lote cerrado! El tanque ${tanque.codigo} quedó vacío en 0 Lts y listo para recibir el lote nuevo.`);
+      cerrarHistorial();
+      init();
+    }
+
+    function exportarHistorialExcel() {
+      const tanque = tanquesGlobal.find(t => t.id === tanqueHistorialActivoId);
+      if (!tanque) return;
+
+      const movsTanque = movimientosGlobal.filter(m => m.tanque_id === tanque.id || m.tanque_destino_id === tanque.id);
+      if (movsTanque.length === 0) return alert('No hay movimientos para exportar en este tanque.');
+
+      // Crear archivo CSV compatible con Excel (con punto y coma y BOM UTF-8 para tildes)
+      let csvContent = "\uFEFF";
+      csvContent += "Tanque;Fecha y Hora;Estado Lote;Operario;Tipo de Movimiento;Cantidad;Unidad;Carbonatacion (Vols)\n";
+
+      movsTanque.forEach(m => {
+        const fecha = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+        const estadoLote = m.lote_cerrado ? 'Cerrado' : 'Activo';
+        const op = m.operario || 'Sistema';
+        let tipo = m.tipo;
+        if (m.tipo === 'Trasvase') {
+          tipo = m.tanque_id === tanque.id ? 'Trasvase (Salida)' : 'Trasvase (Entrada)';
+        }
+        let unidad = 'Litros';
+        if (m.tipo === 'Purga') unidad = 'Baldes';
+        if (m.tipo === 'Recupero Levadura') unidad = 'Kg';
+        if (m.tipo === 'Medicion Carbonatacion') unidad = 'Vols CO2';
+
+        const cant = m.cantidad || 0;
+        const co2 = m.carbonatacion || '';
+
+        csvContent += `${tanque.codigo};"${fecha}";${estadoLote};"${op}";"${tipo}";${cant};${unidad};${co2}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const fechaHoy = new Date().toISOString().slice(0, 10);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Historial_${tanque.codigo}_${tanque.lote || 'Lote'}_${fechaHoy}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     async function eliminarMovimiento(movId) {
@@ -649,7 +803,8 @@
         cantidad, 
         tanque_destino_id, 
         operario,
-        carbonatacion 
+        carbonatacion,
+        lote_cerrado: false
       }]);
 
       if (error) alert('Error: ' + error.message);
