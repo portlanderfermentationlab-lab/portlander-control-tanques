@@ -212,7 +212,7 @@
 
       <div class="card">
         <h2>Listado General de Tanques Fijos</h2>
-        <p>Control exacto de los 26 tanques de la cervecería.</p>
+        <p>Modificá volúmenes libremente: al guardar, el sistema ajustará automáticamente el historial.</p>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -309,7 +309,6 @@
           return;
         }
 
-        // Auto-inicializar los 26 tanques (FT-1 a FT-26) si la base está vacía o incompleta
         if (!resTanques || resTanques.length === 0) {
           const tanquesDefault = [];
           for (let i = 1; i <= 26; i++) {
@@ -331,7 +330,6 @@
           resTanques = inserted;
         }
 
-        // Ordenar estrictamente del FT-1 al FT-26
         tanquesGlobal = resTanques.sort((a, b) => {
           const numA = parseInt(a.codigo.replace(/\D/g, '')) || 0;
           const numB = parseInt(b.codigo.replace(/\D/g, '')) || 0;
@@ -373,7 +371,7 @@
           tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
           
           if (tanqueOperarioActual) {
-            document.getElementById('opTanqueCodigo',).innerText = `Tanque ${tanqueOperarioActual.codigo}`;
+            document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
             document.getElementById('opEstilo').innerText = tanqueOperarioActual.estilo || 'Sin definir';
             document.getElementById('opLote').innerText = tanqueOperarioActual.lote || 'S/N';
             document.getElementById('opObservaciones').innerText = tanqueOperarioActual.observaciones || 'Sin detalles';
@@ -397,7 +395,7 @@
               }
             });
           } else {
-            alert('❌ Tanque no encontrado para el código: ' + hashTanque);
+            alert('❌ Tanque não encontrado para o código: ' + hashTanque);
           }
         } else {
           const adminLogueado = sessionStorage.getItem('admin_auth');
@@ -504,12 +502,17 @@
       const diferencia = nuevoVolumenDeseado - volumenCalculadoActual;
       if (diferencia !== 0) {
         const tipoAjuste = diferencia > 0 ? 'Ajuste Manual (+)' : 'Ajuste Manual (-)';
-        await db.from('movimientos').insert([{
+        const { error: errMov } = await db.from('movimientos').insert([{
           tanque_id: id,
           tipo: tipoAjuste,
           cantidad: Math.abs(diferencia),
+          tanque_destino_id: null,
           operario: 'Administrador'
         }]);
+        if (errMov) {
+          alert('Error al registrar el ajuste de volumen: ' + errMov.message);
+          return;
+        }
       }
 
       alert('✅ Tanque actualizado correctamente.');
