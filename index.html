@@ -306,20 +306,10 @@
     let tanqueOperarioActual = null;
     let tanqueHistorialActivoId = null;
 
-    const hashTanque = window.location.hash.replace('#', '').trim();
-
-    const opcionesEstados = [
-      "Vacío sucio",
-      "Disponible sanitizado",
-      "Fermentando",
-      "Madurando",
-      "Filtrada",
-      "Carbonatando",
-      "Lista"
-    ];
-
     async function init() {
       try {
+        const hashTanque = window.location.hash.replace('#', '').trim();
+
         let { data: resTanques, error } = await db.from('tanques').select('*');
         if (error) {
           alert('Error conectando a la base de datos: ' + error.message);
@@ -391,6 +381,7 @@
           t.carbonatacionActual = ultimaCarbonatacion[t.id] || '-';
         });
 
+        // DETECCIÓN INMEDIATA DE QR (OPERARIO)
         if (hashTanque) {
           document.getElementById('vistaOperario').style.display = 'block';
           tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
@@ -423,6 +414,7 @@
             alert('❌ Tanque no encontrado para el código: ' + hashTanque);
           }
         } else {
+          // VISTA ADMIN
           const adminLogueado = sessionStorage.getItem('admin_auth');
           if (adminLogueado === 'true') {
             document.getElementById('vistaDashboard').style.display = 'block';
@@ -631,7 +623,6 @@
         }
       });
 
-      // Cálculo real y directo: Volumen Inicial ingresado menos todo lo que salió envasado/trasvasado
       const merma = volInicial - totalSalidas;
       const porcentaje = volInicial > 0 ? ((merma / volInicial) * 100).toFixed(1) : 0;
 
