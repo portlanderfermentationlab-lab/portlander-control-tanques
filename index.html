@@ -239,7 +239,7 @@
   <div id="qrModal" class="modal">
     <div class="modal-content">
       <h2>Códigos QR Fijos (FT-1 a FT-26)</h2>
-      <p>Imprimí estos 26 QR una sola vez. Sus enlaces (#FT-1 al #FT-26) son definitivos.</p>
+      <p>Imprimí estos 26 QR una sola vez. Sus enlaces son definitivos.</p>
       <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
         <button onclick="window.print()">🖨️ Imprimir Todos</button>
         <button onclick="cerrarModal()" class="btn-secondary">Cerrar Ventana</button>
@@ -318,7 +318,12 @@
 
     async function init() {
       try {
+        // DETECCIÓN COMPATIBLE: LEE TANTO EL HASH (#FT-X) COMO EL PARÁMETRO (?tanque=FT-X)
+        const urlParams = new URLSearchParams(window.location.search);
+        let tanqueParam = urlParams.get('tanque') ? urlParams.get('tanque').trim() : '';
         const hashTanque = window.location.hash.replace('#', '').trim();
+        
+        const tanqueIdentificado = tanqueParam || hashTanque;
 
         let { data: resTanques, error } = await db.from('tanques').select('*');
         if (error) {
@@ -391,12 +396,12 @@
           t.carbonatacionActual = ultimaCarbonatacion[t.id] || '-';
         });
 
-        if (hashTanque) {
+        if (tanqueIdentificado) {
           document.getElementById('vistaLoginAdmin').style.display = 'none';
           document.getElementById('vistaDashboard').style.display = 'none';
           document.getElementById('vistaOperario').style.display = 'block';
 
-          tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
+          tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === tanqueIdentificado.toLowerCase());
           
           if (tanqueOperarioActual) {
             document.getElementById('opTanqueCodigo').innerText = `Tanque ${tanqueOperarioActual.codigo}`;
@@ -423,7 +428,7 @@
               }
             });
           } else {
-            alert('❌ Tanque no encontrado para el código: ' + hashTanque);
+            alert('❌ Tanque no encontrado para el código: ' + tanqueIdentificado);
           }
         } else {
           document.getElementById('vistaOperario').style.display = 'none';
