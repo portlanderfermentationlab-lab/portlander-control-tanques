@@ -392,7 +392,10 @@
         });
 
         if (hashTanque) {
+          document.getElementById('vistaLoginAdmin').style.display = 'none';
+          document.getElementById('vistaDashboard').style.display = 'none';
           document.getElementById('vistaOperario').style.display = 'block';
+
           tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
           
           if (tanqueOperarioActual) {
@@ -423,11 +426,15 @@
             alert('❌ Tanque no encontrado para el código: ' + hashTanque);
           }
         } else {
+          document.getElementById('vistaOperario').style.display = 'none';
           const adminLogueado = sessionStorage.getItem('admin_auth');
+          
           if (adminLogueado === 'true') {
+            document.getElementById('vistaLoginAdmin').style.display = 'none';
             document.getElementById('vistaDashboard').style.display = 'block';
             renderDashboard();
           } else {
+            document.getElementById('vistaDashboard').style.display = 'none';
             document.getElementById('vistaLoginAdmin').style.display = 'block';
           }
         }
