@@ -306,6 +306,16 @@
     let tanqueOperarioActual = null;
     let tanqueHistorialActivoId = null;
 
+    const opcionesEstados = [
+      "Vacío sucio",
+      "Disponible sanitizado",
+      "Fermentando",
+      "Madurando",
+      "Filtrada",
+      "Carbonatando",
+      "Lista"
+    ];
+
     async function init() {
       try {
         const hashTanque = window.location.hash.replace('#', '').trim();
@@ -381,7 +391,6 @@
           t.carbonatacionActual = ultimaCarbonatacion[t.id] || '-';
         });
 
-        // DETECCIÓN INMEDIATA DE QR (OPERARIO)
         if (hashTanque) {
           document.getElementById('vistaOperario').style.display = 'block';
           tanqueOperarioActual = tanquesGlobal.find(t => t.codigo.toLowerCase() === hashTanque.toLowerCase());
@@ -414,7 +423,6 @@
             alert('❌ Tanque no encontrado para el código: ' + hashTanque);
           }
         } else {
-          // VISTA ADMIN
           const adminLogueado = sessionStorage.getItem('admin_auth');
           if (adminLogueado === 'true') {
             document.getElementById('vistaDashboard').style.display = 'block';
